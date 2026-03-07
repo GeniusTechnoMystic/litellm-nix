@@ -84,6 +84,8 @@ litellm-nixos-container
 │  │  ├─ entrypoint.sh
 │  │  └─ litellm.yaml
 │  │
+│  ├─ docs
+│  │
 │  ├─ modules
 │  │  └─ litellm-proxy.nix
 │  │
