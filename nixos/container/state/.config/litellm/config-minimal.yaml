@@ -1,0 +1,13 @@
+environment_variables:
+  OPENROUTER_API_BASE: https://openrouter.ai/api/v1
+  OPENROUTER_API_KEY: os.environ/OPENROUTER_API_KEY
+  LITELLM_LOG: DEBUG
+
+general_settings:
+  enable_jwt_auth: false
+
+model_list:
+- litellm_params:
+    model: openrouter/openrouter/auto
+  model_name: auto
+

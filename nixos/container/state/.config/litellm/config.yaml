@@ -1,0 +1,412 @@
+environment_variables:
+  APSCHEDULER_COALESCE: true
+  APSCHEDULER_MAX_INSTANCES: 5
+  OPENROUTER_API_BASE: https://openrouter.ai/api/v1
+  OPENROUTER_API_KEY: os.environ/OPENROUTER_API_KEY
+  GEMINI_API_KEY: os.environ/GEMINI_API_KEY
+  NOVITA_API_KEY: os.environ/NOVITA_API_KEY
+  LITELLM_LOG: DEBUG
+  #QDRANT_API_BASE: grpc://127.0.0.1:6334
+  QDRANT_API_BASE: os.environ/QDRANT_API_BASE
+  #VERTEX_API_KEY: os.environ/VERTEX_API_KEY
+  #VERTEX_CREDS_JSON: os.environ/VERTEX_CREDS_JSON
+  GOOGLE_APPLICATION_CREDENTIALS: os.environ/GOOGLE_APPLICATION_CREDENTIALS
+  LITELLM_MASTER_KEY: os.environ/LITELLM_MASTER_KEY
+  #LITELLM_DROP_PARAMS: 
+  LITELLM_HEALTH_CHECK_MAX_TOKENS: 16
+  DEFAULT_HEALTH_CHECK_PROMPT: "Respond with exactly 'Online'"
+  LITELLM_MIGRATION_DIR: /state/.local/share/litellm/migrations
+  LITELLM_SKIP_DB_SETUP: true
+  LITELLM_MIGRATE: false
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY     # [OPTIONAL] Use to enforce auth on proxy. See - https://docs.litellm.ai/docs/proxy/virtual_keys
+
+  alerting_threshold: 0
+  background_health_checks: false
+  health_check_max_tokens: 16
+  health_check_interval: 300
+  disable_adding_master_key_hash_to_db: true
+  disable_master_key_return: true
+  disable_reset_budget: true
+  disable_responses_id_security: false
+  disable_retry_on_max_parallel_request_limit_error: false
+  disable_spend_logs: false
+  enable_jwt_auth: false
+  enforce_user_param: false
+  forward_client_headers_to_llm_api: true
+  global_max_parallel_requests: 15
+  infer_model_from_keys: true
+  max_parallel_requests: 5
+  maximum_spend_logs_retention_interval: 1d
+  maximum_spend_logs_retention_period: 30d
+  reject_clientside_metadata_tags: false
+  store_model_in_db: true
+  store_prompts_in_spend_logs: true
+  use_client_credentials_pass_through_routes: true
+  use_shared_health_check: true
+  user_mcp_management_mode: view_all
+
+  database_url: postgresql://litellm@host.containers.internal:5432/litellm
+
+litellm_settings:
+  allowed_fails: 3
+  cache: false
+  cache_params:
+    mode: default_on
+    qdrant_collection_name: litellm-4096
+    qdrant_quantization_config: binary
+    qdrant_semantic_cache_embedding_model: embedding-vector4096
+    qdrant_semantic_cache_vector_size: 4096
+    similarity_threshold: 0.82
+    ttl: 604800
+    type: qdrant-semantic
+    supported_call_types: [ "acompletion", "atext_completion" ]
+    #  ["acompletion", "atext_completion", "aembedding", "atranscription"]
+    #  /chat/completions, /completions, /embeddings, /audio/transcriptions
+  context_window_fallbacks:
+  - obedient:
+    - obedient-large
+  - auto:
+    - large-10M
+  - large-2M:
+    - large-10M
+  - agent:
+    - large-2M
+  force_ipv4: false
+  json_logs: true
+  langfuse_default_tags:
+  - cache_hit
+  - cache_key
+  - proxy_base_url
+  - user_api_key_alias
+  - user_api_key_user_id
+  - user_api_key_user_email
+  - user_api_key_team_alias
+  - semantic-similarity
+  - proxy_base_url
+  mcp_aliases: {}
+  num_retries: 3
+  redact_user_api_key_info: true
+  request_timeout: 40
+  set_verbose: false
+  telemetry: false
+  turn_off_message_logging: false
+
+model_list:
+- model_name: free
+  litellm_params:
+    model: openrouter/openrouter/free:online
+  
+- model_name: auto
+  litellm_params:
+    model: openrouter/openrouter/auto:online
+    
+- model_name: large-2M
+  litellm_params:
+    model: openrouter/openrouter/auto:online
+
+- model_name: large-10M
+  litellm_params:
+    model: vertex_ai/meta/llama-4-scout-17b-16e-instruct-maas
+    vertex_project: librechat-391205
+    vertex_location: us-east5
+    vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS # [OPTIONAL] Do this OR `!gcloud auth application-default login` - run this to add vertex credentials to your env
+
+- model_name: obedient-large
+  litellm_params:
+    api_base: https://api.x.ai/v1
+    model: xai/grok-4-1-fast-reasoning-latest
+
+#- model_name: obedient
+#  litellm_params:
+#    model: huggingface/scrunter/Qwen3-VL-235B-A22B-Thinking-heretic
+
+- model_name: obedient
+  litellm_params:
+    model: mistral/mistral-large-2411  
+
+- model_name: obedient
+  litellm_params:
+    model: openrouter/mistralai/mistral-large-2411
+  
+- model_name: embedding-vector3072
+  litellm_params:
+    model: gemini/gemini-embedding-001
+    api_key: os.environ/GEMINI_API_KEY
+    caching: false
+    health_check: false
+  model_info:
+    id: gemini/gemini-embedding-001
+    mode: embedding  
+    disable_background_health_check: true
+
+- model_name: embedding-vector4096
+  litellm_params:
+    #model: novita/qwen/qwen3-embedding-8b
+    model: openai/qwen/qwen3-embedding-8b
+    api_key: os.environ/NOVITA_API_KEY
+    api_base: https://api.novita.ai/openai/v1
+    rpm: 50
+    tpm: 50000000
+    caching: false
+    health_check: false
+  model_info:
+    id: novita/qwen/qwen3-embedding-8b
+    mode: embedding  
+    max_input_tokens: 32768
+    disable_background_health_check: true
+
+- model_name: embedding-vector4096
+  litellm_params:
+    model: openai/qwen/qwen3-embedding-8b
+    api_key: os.environ/OPENROUTER_API_KEY
+    api_base: https://openrouter.ai/api/v1
+    drop_params: true
+    caching: false
+    health_check: false
+  model_info:
+    id: qwen/qwen3-embedding-8b
+    mode: embedding  
+    max_input_tokens: 32000
+    max_output_tokens: 32000
+    disable_background_health_check: true
+
+- model_name: agent
+  litellm_params:
+    model: openrouter/google/gemini-3.1-pro-preview
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/google/gemini-3.1-pro-preview-customtools
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/google/gemini-3.1-flash-lite-preview
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/google/gemini-3-flash-preview
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/google/gemini-2.5-flash
+
+- model_name: agent
+  litellm_params:
+    model: openrouter/openai/gpt-5.4-pro
+  model_info:
+    health_check_max_tokens: 16
+    
+- model_name: agent
+  litellm_params:
+    model: openrouter/openai/gpt-5.4
+  model_info:
+    health_check_max_tokens: 16
+    
+- model_name: agent
+  litellm_params:
+    model: openrouter/openai/gpt-5.3-codex
+  model_info:
+    health_check_max_tokens: 16
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/openai/gpt-5.2-codex
+  model_info:
+    health_check_max_tokens: 16
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/openai/gpt-5.2
+  model_info:
+    health_check_max_tokens: 16
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/anthropic/claude-opus-4.6
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/anthropic/claude-sonnet-4.6
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/anthropic/claude-sonnet-4.5
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/z-ai/glm-5
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/moonshotai/kimi-k2.5
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/minimax/minimax-m2.5
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/arcee-ai/trinity-large-preview:free
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/stepfun/step-3.5-flash:free
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/qwen/qwen3.5-397b-a17b
+  
+- model_name: agent
+  litellm_params:
+    model: openrouter/deepseek/deepseek-v3.2
+
+- model_name: images
+  litellm_params:
+    model: openrouter/google/gemini-2.0-flash-001
+
+- model_name: images
+  litellm_params:
+    model: openrouter/google/gemini-2.5-flash-lite
+
+- model_name: images
+  litellm_params:
+    model: openrouter/google/gemini-2.5-flash
+
+- model_name: images
+  litellm_params:
+    model: openrouter/google/gemini-3-flash-preview
+
+- model_name: images
+  litellm_params:
+    model: openrouter/google/gemini-2.5-flash-image
+
+- model_name: images
+  litellm_params:
+    model: openrouter/google/gemini-3-pro-image-preview
+
+- model_name: images
+  litellm_params:
+    model: openrouter/google/gemini-3.1-flash-image-preview
+
+- model_name: images
+  litellm_params:
+    model: openrouter/openai/gpt-5-mini
+  model_info:
+    health_check_max_tokens: 16
+
+- model_name: images
+  litellm_params:
+    model: openrouter/openai/gpt-5-image-mini
+  model_info:
+    health_check_max_tokens: 16
+
+- model_name: images
+  litellm_params:
+    model: openrouter/openai/gpt-5
+  model_info:
+    health_check_max_tokens: 16
+
+- model_name: images
+  litellm_params:
+    model: openrouter/openai/gpt-5-image
+  model_info:
+    health_check_max_tokens: 16
+
+- model_name: images
+  litellm_params:
+    model: openrouter/openai/gpt-5.2
+  model_info:
+    health_check_max_tokens: 16
+
+- model_name: images
+  litellm_params:
+    model: openrouter/x-ai/grok-4.1-fast
+
+- model_name: images
+  litellm_params:
+    model: openrouter/nvidia/nemotron-nano-12b-v2-vl:free
+
+- model_name: images
+  litellm_params:
+    model: openrouter/anthropic/claude-opus-4.5
+
+- model_name: images
+  litellm_params:
+    model: openrouter/mistralai/mistral-medium-3
+
+- model_name: images
+  litellm_params:
+    model: openrouter/mistralai/ministral-14b-2512
+
+- model_name: images
+  litellm_params:
+    model: openrouter/moonshotai/kimi-k2.5
+
+- model_name: images
+  litellm_params:
+    model: openrouter/qwen/qwen3-vl-235b-a22b-instruct
+
+- model_name: images
+  litellm_params:
+    model: openrouter/qwen/qwen3-vl-8b-instruct
+
+- model_name: images
+  litellm_params:
+    model: openrouter/bytedance-seed/seedream-4.5
+  model_info:
+    mode: image_generation
+
+- model_name: images
+  litellm_params:
+    model: openrouter/black-forest-labs/flux.2-klein-4b
+  model_info:
+    mode: image_generation
+
+- model_name: images
+  litellm_params:
+    model: openrouter/black-forest-labs/flux.2-max
+  model_info:
+    mode: image_generation
+
+- model_name: images
+  litellm_params:
+    model: openrouter/black-forest-labs/flux.2-flex
+  model_info:
+    mode: image_generation
+
+- model_name: images
+  litellm_params:
+    model: openrouter/black-forest-labs/flux.2-pro
+  model_info:
+    mode: image_generation
+
+router_settings:
+  allowed_fails: 3
+  allowed_fails_policy:
+    AuthenticationErrorAllowedFails: 3
+    BadRequestErrorAllowedFails: 3
+    ContentPolicyViolationErrorAllowedFails: 3
+    InternalServerErrorAllowedFails: 3
+    RateLimitErrorAllowedFails: 3
+    TimeoutErrorAllowedFails: 3
+  content_policy_fallbacks:
+  - large-2M:
+    - obedient-large
+  - agent:
+    - obedient
+  cooldown_time: 25
+  disable_cooldowns: false
+  enable_pre_call_checks: true
+  enable_tag_filtering: true
+  num_retries: 3
+  retry_policy:
+    AuthenticationErrorRetries: 3
+    ContentPolicyViolationErrorRetries: 3
+    InternalServerErrorRetries: 3
+    RateLimitErrorRetries: 3
+    TimeoutErrorRetries: 3
+  routing_strategy: usage-based-routing-v2
+  tag_filtering_match_any: true
+  timeout: 35

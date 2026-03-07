@@ -1,0 +1,103 @@
+model_list:
+
+  # ============================================
+  # LARGE CONTEXT MODELS - 2M+ token context window
+  # ============================================
+
+  - model_name: large
+    litellm_params:
+      model: xai/grok-4-1-fast-reasoning-latest
+      api_key: os.environ/XAI_API_KEY
+      api_base: https://api.x.ai/v1
+
+  # ============================================
+  # Openrouter Autorouter
+  # ============================================
+
+  - model_name: openrouter/auto
+    litellm_params:
+      model: openrouter/openrouter/auto
+
+  # ============================================
+  # Openrouter Free
+  # ============================================
+
+  - model_name: openrouter/free
+    litellm_params:
+      model: openrouter/openrouter/free
+
+  # ============================================
+  # Embedding
+  # ============================================
+
+  - model_name: qwen3-embedding-8b
+    litellm_params:
+      model: openrouter/qwen/qwen3-embedding-8b
+
+# ============================================
+# ROUTER SETTINGS - Intelligent routing
+# ============================================
+router_settings:
+  routing_strategy: usage-based-routing-v2  # Optimizes for cost, latency, and success rate
+
+  enable_pre_call_checks: true
+
+  # Optional: Uncomment for distributed routing with Redis
+  # redis_host: localhost
+  # redis_port: 6379
+  # redis_password: your_password
+  # model_group_alias: {"my-special-fake-model-alias-name": "fake-openai-endpoint-3"}
+
+# ============================================
+# LITELLM SETTINGS
+# ============================================
+litellm_settings:
+  #set_verbose: True  # Uncomment this if you want to see verbose logs; not recommended in production
+  #port: 4000
+  # drop_params: True
+  # success_callback: ["prometheus"]
+  # max_budget: 100
+  # budget_duration: 30d
+  num_retries: 5
+  request_timeout: 300
+  telemetry: False
+
+  # Fallback chains - if a model group fails, try the next
+  fallbacks: [
+    {"*": ["openrouter/auto"]},
+  ]
+
+  # Context window fallbacks - automatically switch to larger context models
+  context_window_fallbacks: [
+    {"*": ["large"]},
+  ]
+
+# ============================================
+# GENERAL SETTINGS
+# ============================================
+general_settings:
+  #store_model_in_db: True
+  #background_health_checks: true
+  #use_shared_health_check: true
+  #health_check_interval: 600
+  # proxy_batch_write_at: 1
+  # database_connection_pool_limit: 10
+
+  # Optional: Uncomment to enable authentication
+  master_key: os.environ/LITELLM_MASTER_KEY     # [OPTIONAL] Use to enforce auth on proxy. See - https://docs.litellm.ai/docs/proxy/virtual_keys
+
+  # Optional: Uncomment to use database for persistence
+  # database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>"
+  # database_url: "postgresql://<user>:<password>@<host>:<port>/<dbname>" # [OPTIONAL] use for token-based auth to proxy
+
+  # Optional: Budget controls
+  # proxy_budget_rescheduler_min_time: 60
+  # proxy_budget_rescheduler_max_time: 64
+
+# ============================================
+# ENVIRONMENT VARIABLES (Optional)
+# ============================================
+# environment_variables:
+#   REDIS_HOST: localhost
+#   REDIS_PORT: 6379
+#   REDIS_PASSWORD: your_password
