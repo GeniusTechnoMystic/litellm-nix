@@ -1,0 +1,103 @@
+version: '3.9'
+services:
+  litellm:
+    image: localhost/litellm:latest
+    container_name: litellm
+
+    # --- Execution ---
+    # Pass the config explicitly to ensure LiteLLM finds it
+    command: bash /entrypoint.sh --config /state/.config/litellm/config.yaml
+
+    # --- Working Directory ---
+    working_dir: /workspace
+
+    ports:
+      - "4000:4000"
+
+    secrets:
+      - env_secrets
+      - gcp_service_account
+
+    # --- Environment passthrough ---
+    environment:
+      LITELLM_HOSTNAME: "0.0.0.0"
+      CONFIG_FILE_PATH: /state/.config/litellm/config.yaml
+      ENV_VAR_FILE: /run/secrets/env_secrets
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp_service_account
+      APSCHEDULER_COALESCE: "true"
+      APSCHEDULER_MAX_INSTANCES: "5"
+      ANONYMIZED_TELEMETRY: "true"
+      #QDRANT_API_KEY = "16rJUMBRx*************"
+      #QDRANT_API_BASE: grpc://host.docker.internal:6334
+      #QDRANT_API_BASE: http://host.docker.internal:6333
+      QDRANT_API_BASE: http://host.containers.internal:6333
+      
+      LITELLM_HEALTH_CHECK_MAX_TOKENS: 16
+      DEFAULT_HEALTH_CHECK_PROMPT: "Respond with exactly 'Online'"
+
+      DATABASE_HOST: host.containers.internal
+      DATABASE_NAME: litellm
+      DATABASE_PORT: 5432
+      DATABASE_URL:  postgresql://litellm@host.containers.internal:5432/litellm
+      DATABASE_USER: litellm
+
+      # Route LiteLLM baseline migrations to the XDG standard data directory
+      LITELLM_MIGRATION_DIR: /state/.local/share/litellm/migrations
+      LITELLM_SKIP_DB_SETUP: "True"
+      LITELLM_MIGRATE: "False"
+      UI_DB_PRIMARY: "True" # Forces the UI to assume the DB is managed externally
+      
+    extra_hosts:
+      - "host.containers.internal:host-gateway"
+
+    # --- Volumes ---
+    volumes:
+      - ./workspace:/workspace
+      - ./state:/state
+      - ./entrypoint.sh:/entrypoint.sh:ro
+
+    # --- Security & User Namespace ---
+    #userns_mode: keep-id
+    #user: "${UID}:${GID}"
+
+    cap_drop:
+      - ALL
+
+    security_opt:
+      - no-new-privileges:true
+      - label=disable
+
+    # --- Read-only root filesystem (optional but recommended) ---
+    # read_only: true
+
+    # --- Resource Limits ---
+    cpus: 2
+    mem_limit: 4g
+    pids_limit: 256
+
+    # --- Restart Policy ---
+    restart: "no"
+
+    # --- Network Mode ---
+    network_mode: bridge
+
+    #tty: true
+
+    tmpfs:
+      - /tmp
+      - /run
+
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+#volumes:
+#    workspace-data:
+
+# --- Top Level Secrets Definition ---
+# Instructs Compose to pull from the native Podman secrets engine
+secrets:
+  gcp_service_account:
+    external: true
+  env_secrets:
+    external: true

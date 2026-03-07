@@ -1,0 +1,42 @@
+[project]
+name = "litellm-nix-container"
+version = "0.1.0"
+description = "Containerized LiteLLM environment with GCP AI Platform"
+authors = [
+    {name = "GeniusTechnoMystic",email = "6240803+GeniusTechnoMystic@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    # --- Core Gateway ---
+    "fastapi>=0.135.1",
+    "uvicorn>=0.41.0",
+    "litellm[proxy]>=1.82.0",
+    
+    # --- Cloud Providers ---
+    "google-cloud-aiplatform>=1.140.0",
+    "google-generativeai>=0.8.6",
+    
+    # --- High-Performance C-Extensions ---
+    "uvloop>=0.21.0",
+    "orjson>=3.10.0",       # Accelerated JSON streaming
+    "fastuuid>=0.14.0",     # Accelerated request tracing
+    
+    # --- Multimodal & Token Math ---
+    "python-multipart>=0.0.9", # Required for image/file parsing
+    "tiktoken>=0.7.0",         # Required for accurate rate limiting
+    "tokenizers>=0.19.0",      # Required for open-source model token math
+    
+    # --- Observability & Security ---
+    "prometheus-client>=0.24.1",
+    "pydantic>=2.12.5",
+    "pyjwt>=2.11.0",
+    "pyyaml>=6.0.3",
+    
+    # --- Infrastructure Connections ---
+    "redis>=7.2.1",
+    "qdrant-client>=1.17.0",       # Vector Caching
+    "prisma>=0.11.0",              # Database Migrations
+    "psycopg2-binary>=2.9.9",      # Postgres Driver
+        
+]
