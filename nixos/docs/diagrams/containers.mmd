@@ -1,0 +1,15 @@
+%% Containers
+
+flowchart TD
+    subgraph Host[NixOS Host]
+        subgraph Containers
+            LiteLLM
+            VectorDB
+            Search
+            Agents
+        end
+    end
+
+    Agents --> LiteLLM
+    LiteLLM --> VectorDB
+    LiteLLM --> Search

@@ -75,6 +75,8 @@
           nodejs
           openssl
 
+          libaom libgcc glibc expat glib gnutls krb5 libsndfile libxml2 libxslt
+
           # Use the targeted v5 engine
           pkgs-prisma5.prisma-engines
         ];
@@ -105,14 +107,14 @@
         debugTools = with pkgs; [
           # --- OS/SHELL BASE ---
           bashInteractive coreutils tzdata bash gnugrep gnused findutils procps
-          ripgrep gawk less nano fd htop git tini bat eza strace
+          ripgrep gawk less nano fd htop git tini bat eza strace just
           gnutar gzip
-          jq yq
-
+          jq yq uv diffutils
+          
           # --- NETWORKING ---
           iana-etc curl iproute2 wget netcat-gnu dnsutils
 
-          redis
+          #redis
 
           google-cloud-sdk
 
@@ -170,15 +172,30 @@
               "OPENSSL_CONF=${pkgs.openssl.out}/etc/ssl/openssl.cnf"
               "OPENSSL_MODULES=${pkgs.openssl.out}/lib/ossl-modules"
 
-              "PRISMA_QUERY_ENGINE_BINARY=${pkgs-prisma5.prisma-engines}/bin/query-engine"
-              "PRISMA_SCHEMA_ENGINE_BINARY=${pkgs-prisma5.prisma-engines}/bin/schema-engine"
-              "PRISMA_FMT_BINARY=${pkgs-prisma5.prisma-engines}/bin/prisma-fmt"
+              "NPM_CONFIG_CACHE=/state/.cache/npm"
+              "NPM_CONFIG_PREFER_OFFLINE=true"
+
+              "PRISMA_BINARY_CACHE_DIR=/state/.cache/prisma-python/binaries"
+              #"PRISMA_CLI_BINARY_TARGETS=debian-openssl-3.0.x"
               "PRISMA_CLI_QUERY_ENGINE_TYPE=binary"
               "PRISMA_CLIENT_ENGINE_TYPE=binary"
+              "PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1"
+              "PRISMA_FMT_BINARY=${pkgs-prisma5.prisma-engines}/bin/prisma-fmt"
+              "PRISMA_HIDE_UPDATE_MESSAGE=1"
+              "PRISMA_OFFLINE_MODE=true"
+              "PRISMA_QUERY_ENGINE_BINARY=${pkgs-prisma5.prisma-engines}/bin/query-engine"
+              "PRISMA_SCHEMA_ENGINE_BINARY=${pkgs-prisma5.prisma-engines}/bin/schema-engine"
+              "PRISMA_SKIP_POSTINSTALL_GENERATE=1"
             ];
 
             # k8s-friendly: don’t assume root; you can override at runtime
             #User = "1000:1000";
+            #User = "litellm";
+            
+            #users.users.litellm = {
+            #  isSystemUser = true;
+            #  group = "litellm";
+            #};
 
             WorkingDir = "/workspace";
             Volumes = { "/workspace" = {}; };
@@ -194,8 +211,25 @@
       
       # A devShell allowing you to run `nix develop` and test the container context locally
         devShells.default = pkgs.mkShell {
-          packages = [ customPythonEnv ] ++ runtimeTools ++ debugTools;
+          packages =
+            [ customPythonEnv ]
+            ++ runtimeTools
+            ++ debugTools
+            ++ (with pkgs; [
+              git 
+              gcc
+              pkg-config
+              libffi
+              uv
+              direnv
+              #hatchling
+              mise
+              zlib
+            ]);
         };
+        shellHook = ''
+          export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
+        '';
       }
     );
 }

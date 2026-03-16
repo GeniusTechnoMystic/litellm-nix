@@ -1,0 +1,18 @@
+%% System Context Diagram
+%% Shows overall architecture
+
+flowchart LR
+    User[Developer / User]
+    Agents[Agents / MCP Clients]
+    Router[LiteLLM Router]
+    Providers[LLM Providers]
+    DB[(Prisma / Database)]
+    Vector[(Vector DB)]
+    Search[(Search Engines)]
+
+    User --> Agents
+    Agents --> Router
+    Router --> Providers
+    Router --> DB
+    Router --> Vector
+    Router --> Search

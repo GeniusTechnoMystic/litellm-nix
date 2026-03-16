@@ -1,1 +1,27 @@
 *.ipynb linguist-vendored
+
+.gitignore merge=ours
+
+# 🛡️ FORK DEFENSE: Prevent upstream from clobbering our lockfiles
+
+poetry.lock merge=ours
+package-lock.json merge=ours
+yarn.lock merge=ours
+
+# 🛡️ FORK DEFENSE: Protect our custom Nix-ready package definitions
+
+# Python Packages
+
+pyproject.toml merge=ours
+enterprise/pyproject.toml merge=ours
+litellm-proxy-extras/pyproject.toml merge=ours
+
+# JavaScript/Node Packages
+
+docs/my-website/package.json merge=ours
+litellm-js/proxy/package.json merge=ours
+litellm-js/spend-logs/package.json merge=ours
+tests/proxy_admin_ui_tests/package.json merge=ours
+tests/proxy_admin_ui_tests/ui_unit_tests/package.json merge=ours
+ui/litellm-dashboard/package.json merge=ours
+#worker/package.json merge=ours

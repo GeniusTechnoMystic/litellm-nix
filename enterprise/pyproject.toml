@@ -1,30 +1,48 @@
-[tool.poetry]
+[project]
 name = "litellm-enterprise"
 version = "0.1.34"
 description = "Package for LiteLLM Enterprise features"
-authors = ["BerriAI"]
+authors = [{name = "BerriAI"}]
 readme = "README.md"
+requires-python = ">=3.8.1,<4.0,!=3.9.7"
 
+# Add any specific runtime dependencies for the enterprise package here
+dependencies = []
 
-[tool.poetry.urls]
+[project.urls]
 homepage = "https://litellm.ai"
-Homepage = "https://litellm.ai"
 repository = "https://github.com/BerriAI/litellm"
-Repository = "https://github.com/BerriAI/litellm"
 documentation = "https://docs.litellm.ai"
-Documentation = "https://docs.litellm.ai"
-
-[tool.poetry.dependencies]
-python = ">=3.8.1,<4.0, !=3.9.7"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+# Exclude non-library files and old build artifacts from the source distribution (.tar.gz)
+[tool.hatch.build]
+exclude = [
+    "dist",
+    "cloudformation_stack",
+    "enterprise_ui",
+]
+
+# Explicitly declare which Python modules to bundle into the compiled wheel (.whl)
+[tool.hatch.build.targets.wheel]
+packages = [
+    "litellm_enterprise",
+    "enterprise_hooks"
+]
+
+# Hatchling will automatically discover a folder named `litellm_enterprise`.
+# If your actual python code lives in a differently named folder (e.g., `src/`),
+# uncomment and adjust the following lines:
+#[tool.hatch.build.targets.wheel]
+#packages = ["litellm-enterprise"]
 
 [tool.commitizen]
 version = "0.1.33"
 version_files = [
-    "pyproject.toml:version",
+    "pyproject.toml:^version",
     "../requirements.txt:litellm-enterprise==",
-    "../pyproject.toml:litellm-enterprise = {version = \""
+    "../pyproject.toml:litellm-enterprise>="
 ]

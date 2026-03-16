@@ -1,0 +1,11 @@
+%% Request Flow
+
+sequenceDiagram
+    participant Agent
+    participant LiteLLM
+    participant Provider
+
+    Agent->>LiteLLM: API Request
+    LiteLLM->>Provider: Routed Request
+    Provider-->>LiteLLM: Response
+    LiteLLM-->>Agent: Final Output

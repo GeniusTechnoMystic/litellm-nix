@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="1040" viewBox="0 0 1640 1040">
+  <defs>
+    <style>
+      .title { font: 700 28px Arial, Helvetica, sans-serif; fill: #111; }
+      .subtitle { font: 400 14px Arial, Helvetica, sans-serif; fill: #444; }
+      .boxtext { font: 600 14px Arial, Helvetica, sans-serif; fill: #111; }
+      .small { font: 400 12px Arial, Helvetica, sans-serif; fill: #333; }
+      .group { font: 700 16px Arial, Helvetica, sans-serif; fill: #234; }
+      .legend { font: 600 12px Arial, Helvetica, sans-serif; fill: #111; }
+      .arrow { stroke: #444; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .thin { stroke-width: 1.5; }
+      .core { fill: #d9f2e6; stroke: #1f6f4a; stroke-width: 2; rx: 14; }
+      .infra { fill: #e8eefc; stroke: #3451b2; stroke-width: 2; rx: 14; }
+      .aux { fill: #f6ead8; stroke: #9a5b00; stroke-width: 2; rx: 14; }
+      .groupbox { fill: #fafcff; stroke: #b7c4e6; stroke-width: 2; rx: 18; stroke-dasharray: 8 6; }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#444"/>
+    </marker>
+  </defs>
+
+<text x="40" y="46" class="title">LiteLLM on NixOS</text>
+<text x="40" y="72" class="subtitle">SVG reconstruction of the Figma/FigJam architecture diagram</text>
+<rect x="40" y="100" width="640" height="560" class="groupbox"/>
+<text x="54" y="124" class="group">Repository / Build System</text>
+<rect x="720" y="100" width="400" height="560" class="groupbox"/>
+<text x="734" y="124" class="group">Runtime / Deployment</text>
+<rect x="1160" y="100" width="440" height="560" class="groupbox"/>
+<text x="1174" y="124" class="group">Proxy / Provider Layer</text>
+<rect x="80" y="145" width="180" height="82" class="infra"/>
+<text x="170.0" y="169" text-anchor="middle" class="boxtext">flake.nix</text>
+<text x="170.0" y="189" text-anchor="middle" class="small">builds OCI image</text>
+<text x="170.0" y="205" text-anchor="middle" class="small">defines outputs</text>
+<rect x="290" y="145" width="180" height="82" class="infra"/>
+<text x="380.0" y="169" text-anchor="middle" class="boxtext">overlay/default.nix</text>
+<text x="380.0" y="189" text-anchor="middle" class="small">pkgs.litellm override</text>
+<rect x="500" y="145" width="140" height="82" class="infra"/>
+<text x="570.0" y="169" text-anchor="middle" class="boxtext">modules/</text>
+<text x="570.0" y="189" text-anchor="middle" class="small">litellm-proxy.nix</text>
+<rect x="80" y="270" width="180" height="82" class="infra"/>
+<text x="170.0" y="294" text-anchor="middle" class="boxtext">container.nix</text>
+<rect x="290" y="270" width="180" height="82" class="infra"/>
+<text x="380.0" y="294" text-anchor="middle" class="boxtext">compose.yaml</text>
+<rect x="500" y="270" width="140" height="82" class="infra"/>
+<text x="570.0" y="294" text-anchor="middle" class="boxtext">k8s/</text>
+<text x="570.0" y="314" text-anchor="middle" class="small">deployment + service</text>
+<rect x="80" y="395" width="180" height="92" class="infra"/>
+<text x="170.0" y="419" text-anchor="middle" class="boxtext">entrypoint.sh</text>
+<rect x="290" y="395" width="180" height="92" class="infra"/>
+<text x="380.0" y="419" text-anchor="middle" class="boxtext">litellm.yaml</text>
+<rect x="500" y="395" width="140" height="92" class="infra"/>
+<text x="570.0" y="419" text-anchor="middle" class="boxtext">scripts/</text>
+<text x="570.0" y="439" text-anchor="middle" class="small">build + test</text>
+<rect x="140" y="545" width="180" height="82" class="aux"/>
+<text x="230.0" y="569" text-anchor="middle" class="boxtext">requirements.lock</text>
+<text x="230.0" y="589" text-anchor="middle" class="small">uv2nix</text>
+<rect x="390" y="545" width="180" height="82" class="core"/>
+<text x="480.0" y="569" text-anchor="middle" class="boxtext">Python environment</text>
+<text x="480.0" y="589" text-anchor="middle" class="small">uv / pip / venv</text>
+<rect x="760" y="145" width="150" height="82" class="core"/>
+<text x="835.0" y="169" text-anchor="middle" class="boxtext">NixOS module</text>
+<text x="835.0" y="189" text-anchor="middle" class="small">services.litellm.enable</text>
+<rect x="940" y="145" width="140" height="82" class="core"/>
+<text x="1010.0" y="169" text-anchor="middle" class="boxtext">systemd service</text>
+<rect x="760" y="280" width="150" height="82" class="core"/>
+<text x="835.0" y="304" text-anchor="middle" class="boxtext">Volumes</text>
+<text x="835.0" y="324" text-anchor="middle" class="small">logs / config mounts</text>
+<rect x="940" y="280" width="140" height="82" class="core"/>
+<text x="1010.0" y="304" text-anchor="middle" class="boxtext">Secrets</text>
+<text x="1010.0" y="324" text-anchor="middle" class="small">env vars / mounted secrets</text>
+<rect x="850" y="410" width="160" height="92" class="core"/>
+<text x="930.0" y="434" text-anchor="middle" class="boxtext">OCI image</text>
+<text x="930.0" y="454" text-anchor="middle" class="small">dockerTools.buildLayeredImage</text>
+<rect x="1230" y="220" width="210" height="120" class="core"/>
+<text x="1335.0" y="244" text-anchor="middle" class="boxtext">LiteLLM proxy</text>
+<text x="1335.0" y="264" text-anchor="middle" class="small">OpenAI-compatible API</text>
+<text x="1335.0" y="280" text-anchor="middle" class="small">port 4000</text>
+<text x="1335.0" y="296" text-anchor="middle" class="small">chat / completions</text>
+<rect x="1230" y="420" width="210" height="98" class="core"/>
+<text x="1335.0" y="444" text-anchor="middle" class="boxtext">Routing layer</text>
+<text x="1335.0" y="464" text-anchor="middle" class="small">pricing / context windows</text>
+<text x="1335.0" y="480" text-anchor="middle" class="small">fallback / selection</text>
+<rect x="1480" y="220" width="90" height="120" class="aux"/>
+<text x="1525.0" y="244" text-anchor="middle" class="boxtext">Providers</text>
+<text x="1525.0" y="264" text-anchor="middle" class="small">OpenAI</text>
+<text x="1525.0" y="280" text-anchor="middle" class="small">Together</text>
+<text x="1525.0" y="296" text-anchor="middle" class="small">local</text>
+<text x="1525.0" y="312" text-anchor="middle" class="small">custom</text>
+<rect x="1480" y="420" width="90" height="98" class="aux"/>
+<text x="1525.0" y="444" text-anchor="middle" class="boxtext">Metrics</text>
+<text x="1525.0" y="464" text-anchor="middle" class="small">future observability</text>
+<line x1="260" y1="186" x2="290" y2="186" class="arrow thin"/>
+<line x1="470" y1="186" x2="500" y2="186" class="arrow thin"/>
+<line x1="260" y1="311" x2="290" y2="311" class="arrow thin"/>
+<line x1="470" y1="311" x2="500" y2="311" class="arrow thin"/>
+<line x1="260" y1="441" x2="290" y2="441" class="arrow thin"/>
+<line x1="470" y1="441" x2="500" y2="441" class="arrow thin"/>
+<line x1="320" y1="586" x2="390" y2="586" class="arrow"/>
+<line x1="570" y1="586" x2="850" y2="456" class="arrow"/>
+<line x1="170" y1="487" x2="170" y2="545" class="arrow thin"/>
+<line x1="380" y1="487" x2="470" y2="545" class="arrow thin"/>
+<line x1="170" y1="227" x2="850" y2="410" class="arrow thin"/>
+<line x1="380" y1="227" x2="850" y2="410" class="arrow thin"/>
+<line x1="570" y1="227" x2="850" y2="410" class="arrow thin"/>
+<line x1="170" y1="352" x2="850" y2="410" class="arrow thin"/>
+<line x1="380" y1="352" x2="850" y2="410" class="arrow thin"/>
+<line x1="570" y1="352" x2="850" y2="410" class="arrow thin"/>
+<line x1="835" y1="227" x2="940" y2="227" class="arrow"/>
+<line x1="985" y1="227" x2="985" y2="410" class="arrow thin"/>
+<line x1="910" y1="321" x2="850" y2="456" class="arrow thin"/>
+<line x1="1010" y1="321" x2="930" y2="410" class="arrow thin"/>
+<line x1="1010" y1="456" x2="1230" y2="280" class="arrow"/>
+<line x1="1335" y1="340" x2="1335" y2="420" class="arrow"/>
+<line x1="1440" y1="280" x2="1480" y2="280" class="arrow"/>
+<line x1="1440" y1="469" x2="1480" y2="469" class="arrow"/>
+<rect x="1310" y="40" width="250" height="42" fill="#fff" stroke="#ddd" rx="10"/>
+<rect x="1330" y="53" width="20" height="12" class="core"/><text x="1360" y="64" class="legend">Runtime / app</text>
+<rect x="1440" y="53" width="20" height="12" class="infra"/><text x="1470" y="64" class="legend">Repo / build</text>
+<rect x="1520" y="53" width="20" height="12" class="aux"/><text x="1550" y="64" class="legend">External / aux</text>
+</svg>

@@ -1,30 +1,40 @@
-[tool.poetry]
+[project]
 name = "litellm-proxy-extras"
 version = "0.4.56"
 description = "Additional files for the LiteLLM Proxy. Reduces the size of the main litellm package."
-authors = ["BerriAI"]
+authors = [{name = "BerriAI"}]
 readme = "README.md"
+requires-python = ">=3.8.1,<4.0,!=3.9.7"
 
+# Add any specific runtime dependencies for proxy-extras here
+dependencies = []
 
-[tool.poetry.urls]
+[project.urls]
 homepage = "https://litellm.ai"
-Homepage = "https://litellm.ai"
 repository = "https://github.com/BerriAI/litellm"
-Repository = "https://github.com/BerriAI/litellm"
 documentation = "https://docs.litellm.ai"
-Documentation = "https://docs.litellm.ai"
-
-[tool.poetry.dependencies]
-python = ">=3.8.1,<4.0, !=3.9.7"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+# Exclude old build artifacts from the source distribution
+[tool.hatch.build]
+exclude = [
+    "dist",
+]
+
+# Explicitly declare the Python module to bundle into the compiled wheel (.whl).
+# Hatchling will natively include the Prisma SQL migration files within this directory.
+[tool.hatch.build.targets.wheel]
+packages = [
+    "litellm_proxy_extras"
+]
 
 [tool.commitizen]
 version = "0.4.56"
 version_files = [
-    "pyproject.toml:version",
+    "pyproject.toml:^version",
     "../requirements.txt:litellm-proxy-extras==",
-    "../pyproject.toml:litellm-proxy-extras = {version = \""
+    "../pyproject.toml:litellm-proxy-extras>="
 ]

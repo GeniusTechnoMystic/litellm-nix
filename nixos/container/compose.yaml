@@ -3,16 +3,13 @@ services:
   litellm:
     image: localhost/litellm:latest
     container_name: litellm
+    working_dir: /workspace
+    ports:
+      - "4000:4000"
 
     # --- Execution ---
     # Pass the config explicitly to ensure LiteLLM finds it
     command: bash /entrypoint.sh --config /state/.config/litellm/config.yaml
-
-    # --- Working Directory ---
-    working_dir: /workspace
-
-    ports:
-      - "4000:4000"
 
     secrets:
       - env_secrets
@@ -57,18 +54,23 @@ services:
       - ./entrypoint.sh:/entrypoint.sh:ro
 
     # --- Security & User Namespace ---
-    #userns_mode: keep-id
+    userns_mode: keep-id
     #user: "${UID}:${GID}"
-
-    cap_drop:
-      - ALL
+    #user: litellm:litellm
 
     security_opt:
       - no-new-privileges:true
       - label=disable
 
+    cap_drop:
+      - ALL
+
     # --- Read-only root filesystem (optional but recommended) ---
     # read_only: true
+
+    tmpfs:
+      - /tmp
+      - /run
 
     # --- Resource Limits ---
     cpus: 2
@@ -82,10 +84,6 @@ services:
     network_mode: bridge
 
     #tty: true
-
-    tmpfs:
-      - /tmp
-      - /run
 
     dns:
       - 1.1.1.1
