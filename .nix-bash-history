@@ -1,0 +1,7 @@
+git rebase --abort
+git reset --hard 3d2d2e4970a012eceee849211b59077e3beef9fe
+git log -n 5
+git push origin nixos-container --force
+just clean
+codium Justfile
+just sync-upstream
