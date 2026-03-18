@@ -106,7 +106,20 @@ install-js:
     cd tests/proxy_admin_ui_tests/ui_unit_tests && bun install
 
 # ==========================================
-# 6. Git & Repository Management
+# 6. Container & Deployment
+# ==========================================
+
+# Build the deterministic Docker container image using Nix and load it into Docker
+build-container:
+    @echo "🐳 Building immutable Docker container with Nix..."
+    nix build .#container
+    @echo "🚢 Loading image into Docker daemon..."
+    #docker load < result
+    podman load < result
+    @echo "✅ Container image 'litellm:latest' is ready! You can now run 'podman compose up'."
+
+# ==========================================
+# 7. Git & Repository Management
 # ==========================================
 
 # Safely fetch and rebase updates from the upstream BerriAI repository
@@ -114,18 +127,29 @@ sync-upstream:
     @echo "🔄 Fetching upstream changes..."
     git fetch upstream
     @echo "🔀 Rebasing current branch onto upstream/main..."
-    git rebase upstream/main
+    # The '-' prefix tells Just to keep going even if the rebase pauses due to a conflict
+    -git rebase upstream/main
+    # Loop: As long as Git is stuck in a rebasing state, keep popping meld!
+    @while [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ]; do \
+        echo "⚠️ Merge conflict detected! Launching meld... (Press Ctrl+C to abort)"; \
+        git mergetool --tool=meld; \
+        echo "✅ Attempting to continue rebase..."; \
+        git rebase --continue || true; \
+    done
     @echo "🛡️ Purging upstream's legacy lockfiles..."
     rm -f poetry.lock package-lock.json ui/litellm-dashboard/package-lock.json docs/my-website/package-lock.json enterprise/poetry.lock litellm-js/spend-logs/package-lock.json litellm-proxy-extras/poetry.lock package.json requirements.txt tests/proxy_admin_ui_tests/package-lock.json tests/proxy_admin_ui_tests/ui_unit_tests/package-lock.json
     @echo "🔒 Regenerating native uv and bun lockfiles..."
-
-    @echo "📦 Syncing uv lockfile..."
     uv lock
     uv sync
-    cd ui/litellm-dashboard && bun install
-    @echo "✅ Upstream sync complete! Run 'just test' to verify nothing broke."
+    just install-js
+    @echo "✅ Upstream synced. Run 'just test' to verify integration."
 
 # Clean up stale local branches that have been merged
 git-clean-branches:
     @echo "🧹 Deleting merged local branches..."
     git branch --merged | egrep -v "(^\*|main|master)" | xargs git branch -d
+
+# Check for missing or outdated dependencies between our TOML and Upstream
+audit-deps:
+    @uv run python scripts/audit_deps.py
+

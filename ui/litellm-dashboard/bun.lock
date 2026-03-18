@@ -88,7 +88,7 @@
     "path-to-regexp": ">=0.1.12",
     "prismjs": ">=1.30.0",
     "serve-static": ">=1.16.0",
-    "tar": ">=7.5.10",
+    "tar": ">=7.5.11",
     "tar-fs": ">=2.1.4",
     "webpack": ">=5.94.0",
     "webpack-dev-middleware": ">=5.3.4",

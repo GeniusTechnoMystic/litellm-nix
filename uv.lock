@@ -2904,8 +2904,10 @@ dev = [
     { name = "flake8" },
     { name = "hypercorn" },
     { name = "jaraco-context" },
-    { name = "litellm", extra = ["server", "storage"] },
+    { name = "litellm", extra = ["enterprise", "grpc"] },
     { name = "mypy" },
+    { name = "numpydoc" },
+    { name = "openapi-core" },
     { name = "pygitguardian" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -2925,6 +2927,9 @@ dev = [
 ]
 docs = [
     { name = "numpydoc" },
+]
+prod = [
+    { name = "litellm", extra = ["enterprise", "grpc"] },
 ]
 
 [package.metadata]
@@ -3042,9 +3047,11 @@ dev = [
     { name = "flake8", specifier = ">=6.1.0" },
     { name = "hypercorn", specifier = ">=0.15.0,<0.16.0" },
     { name = "jaraco-context", specifier = ">=6.1.0" },
-    { name = "litellm", extras = ["server"] },
-    { name = "litellm", extras = ["storage"] },
+    { name = "litellm", extras = ["enterprise"] },
+    { name = "litellm", extras = ["grpc"] },
     { name = "mypy", specifier = ">=1.0" },
+    { name = "numpydoc" },
+    { name = "openapi-core", specifier = ">=0.21.0" },
     { name = "pygitguardian" },
     { name = "pytest", specifier = ">=7.4.3" },
     { name = "pytest-asyncio", specifier = ">=0.21.1" },
@@ -3063,6 +3070,10 @@ dev = [
     { name = "wheel", specifier = ">=0.46.2" },
 ]
 docs = [{ name = "numpydoc" }]
+prod = [
+    { name = "litellm", extras = ["enterprise"] },
+    { name = "litellm", extras = ["grpc"] },
+]
 
 [[package]]
 name = "litellm-enterprise"
@@ -3071,7 +3082,7 @@ source = { editable = "enterprise" }
 
 [[package]]
 name = "litellm-proxy-extras"
-version = "0.4.54"
+version = "0.4.56"
 source = { editable = "litellm-proxy-extras" }
 
 [[package]]

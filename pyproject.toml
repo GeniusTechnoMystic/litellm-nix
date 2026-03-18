@@ -16,7 +16,6 @@ requires-python = ">=3.10,<3.14,!=3.9.7"
 # Dependency declarations. Optional features are defined below under
 # `[project.optional-dependencies]`.
 dependencies = [
-    #"litellm[proxy,caching,semantic-router,mlflow,grpc,google]>=1.82.0",
     "aiohttp>=3.13.3",              # for network calls
     "anyio>=4.8.0",                 # openai + http req.
     "click>=8.1.7",                 # for proxy cli
@@ -181,6 +180,11 @@ all = [
 ]
 
 [dependency-groups]
+prod = [
+    "litellm[enterprise]",
+    "litellm[grpc]",
+    #"hatchling", # Forces uv2nix to successfully map this group
+]
 dev = [ 
     "litellm[enterprise]",
     "litellm[grpc]", 
@@ -348,3 +352,7 @@ members = [
 [tool.uv.sources]
 litellm-enterprise = { workspace = true }
 litellm-proxy-extras = { workspace = true }
+
+[tool.uv.extra-build-dependencies]
+ml-dtypes = [ "setuptools", "numpy" ]
+
