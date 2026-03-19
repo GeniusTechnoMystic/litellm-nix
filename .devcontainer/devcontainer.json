@@ -15,7 +15,7 @@
   },
 
   "remoteUser": "vscode",
-  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  //"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
   "containerEnv": {
     //"NIX_CONFIG": "experimental-features = nix-command flakes\naccept-flake-config = true\nkeep-outputs = true\nkeep-derivations = true",
@@ -46,7 +46,6 @@
     "3000": { "label": "Next.js UI", "onAutoForward": "notify" }
   },
 
-  "updateContentCommand": ["nix", "develop", ".#fullstack", "-c", "true"],
   "postCreateCommand": ["bash", ".devcontainer/post-create.sh"]
   //"postCreateCommand": "nix develop .#fullstack -c echo '🚀 Nix Environment Provisioned!'",
   //"postCreateCommand": "bash -lc 'direnv allow . || true; nix develop .#fullstack -c true'"

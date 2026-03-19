@@ -63,7 +63,6 @@ main() {
     # Allow direnv to evaluate the local .envrc and bootstrap Nix dependencies
     log_info "Allowing direnv configuration..."
     direnv allow . || true
-    nix develop .#fullstack -c true
 
     log_info "✅ Devcontainer workspace initialization complete."
     log_info "Open a new terminal and direnv will load .envrc (use flake .#fullstack)."
