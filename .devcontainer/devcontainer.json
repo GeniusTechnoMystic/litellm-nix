@@ -6,11 +6,20 @@
     "context": ".."
   },
 
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "64gb"
+  },
+
   "features": {
     "ghcr.io/devcontainers/features/nix:1": {
       "version": "latest",
       "multiUser": true,
       "extraNixConfig": "experimental-features = nix-command flakes\nkeep-outputs = true\nkeep-derivations = true"
+    },
+    "ghcr.io/devcontainers/features/sshd:1": {
+      "version": "latest"
     }
   },
 
@@ -34,8 +43,8 @@
         "jnoortheen.nix-ide",
         "arrterian.nix-env-selector",
         "mkhl.direnv",
-        "charliermarsh.ruff",
-        "biomejs.biome"        
+        //"charliermarsh.ruff",
+        //"biomejs.biome"        
       ]
     }
   },
