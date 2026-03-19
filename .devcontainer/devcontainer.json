@@ -1,24 +1,41 @@
 {
-  "name": "LiteLLM Polyglot Workspace",
-  "image": "mcr.microsoft.com/devcontainers/base:debian",
+  "name": "Nix-Bootstrapped LiteLLM Workspace",
   
+  "build": {
+    "dockerfile": "Dockerfile.dockerfile",
+    "context": ".."
+  },
+
   "features": {
     "ghcr.io/devcontainers/features/nix:1": {
+      "version": "latest",
+      "multiUser": true,
       "extraNixConfig": "experimental-features = nix-command flakes\nkeep-outputs = true\nkeep-derivations = true"
     }
+  },
+
+  "remoteUser": "vscode",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+  "containerEnv": {
+    //"NIX_CONFIG": "experimental-features = nix-command flakes\naccept-flake-config = true\nkeep-outputs = true\nkeep-derivations = true",
+    "DIRENV_LOG_FORMAT": ""
   },
 
   "customizations": {
     "vscode": {
       "settings": {
         "nix.enableLanguageServer": true,
-        "nix.serverPath": "nixd"
+        "nix.serverPath": "nixd",
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "files.eol": "\n"
       },
       "extensions": [
         "jnoortheen.nix-ide",
+        "arrterian.nix-env-selector",
         "mkhl.direnv",
         "charliermarsh.ruff",
-        "biomejs.biome"
+        "biomejs.biome"        
       ]
     }
   },
@@ -29,6 +46,9 @@
     "3000": { "label": "Next.js UI", "onAutoForward": "notify" }
   },
 
-  "postCreateCommand": "nix develop .#fullstack -c echo '🚀 Nix Environment Provisioned!'",
-  "postAttachCommand": "direnv allow"
+  "updateContentCommand": ["nix", "develop", ".#fullstack", "-c", "true"],
+  "postCreateCommand": ["bash", ".devcontainer/post-create.sh"]
+  //"postCreateCommand": "nix develop .#fullstack -c echo '🚀 Nix Environment Provisioned!'",
+  //"postCreateCommand": "bash -lc 'direnv allow . || true; nix develop .#fullstack -c true'"
+  //"postAttachCommand": "direnv allow",
 }
