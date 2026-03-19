@@ -6,6 +6,7 @@ __pycache__/
 .claude
 .codegpt
 .cursor
+.devpod-internal/
 .direnv
 .env
 .gitignore
@@ -13,6 +14,7 @@ __pycache__/
 .langfuse.log
 .mypy_cache/*
 .newenv
+.nix-bash-history
 .python-version
 .venv
 .venv_policy_test
