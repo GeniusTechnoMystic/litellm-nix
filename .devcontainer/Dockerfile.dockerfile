@@ -45,9 +45,12 @@ RUN apt-get update \
 
 RUN printf '%s\n' \
   '' \
-  '# direnv hook for non-root interactive bash shells' \
+  '# mise and direnv hooks for non-root interactive bash shells' \
   'if [ -n "${BASH_VERSION:-}" ] && [ "$EUID" -ne 0 ] && command -v direnv >/dev/null 2>&1; then' \
   '  eval "$(direnv hook bash)"' \
+  '  eval "$(mise activate bash)"' \
+  '  eval "$(mise trust .)"' \
+  '  eval "$(mise install)"' \
   'fi' \
   >> /etc/bash.bashrc
 
