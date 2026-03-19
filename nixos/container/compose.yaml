@@ -18,7 +18,7 @@ services:
     # --- Environment passthrough ---
     environment:
       LITELLM_HOSTNAME: "0.0.0.0"
-      CONFIG_FILE_PATH: /state/.config/litellm/config.yaml
+      CONFIG_FILE_PATH: /state/.config/litellm/config.yaml 
       ENV_VAR_FILE: /run/secrets/env_secrets
       GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp_service_account
       APSCHEDULER_COALESCE: "true"

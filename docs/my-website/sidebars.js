@@ -48,6 +48,20 @@ const sidebars = {
         slug: "/guardrail_providers"
       },
       items: [
+        {
+          type: "category",
+          label: "Contributing to Guardrails",
+          items: [
+            "adding_provider/generic_guardrail_api",
+            "adding_provider/simple_guardrail_tutorial",
+            "adding_provider/adding_guardrail_support",
+          ]
+        },
+        {
+          type: "doc",
+          id: "proxy/guardrails/team_based_guardrails",
+          label: "Team Bring-Your-Own Guardrails",
+        },
         ...[
           "proxy/guardrails/qualifire",
           "proxy/guardrails/aim_security",
@@ -672,6 +686,7 @@ const sidebars = {
             "mcp_control",
             "mcp_cost",
             "mcp_guardrail",
+            "mcp_zero_trust",
             "mcp_troubleshoot",
           ]
         },
