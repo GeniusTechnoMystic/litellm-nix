@@ -1,7 +1,24 @@
-git rebase --abort
-git reset --hard 3d2d2e4970a012eceee849211b59077e3beef9fe
-git log -n 5
-git push origin nixos-container --force
-just clean
-codium Justfile
-just sync-upstream
+git rm -f .nix-bash-history
+ls -la
+git add litellm-js/spend-logs/bun.lock
+git status .
+nix develop --build
+git status .
+cd
+history |grep danny |tail
+cd nixos
+nix run nixpkgs#home-manager -- switch --flake .#danny -b backup
+cd ..
+cd .config
+ls -la *codium*
+ls -la *code*
+cd  ..
+ls -la *codium* *code*
+find . -iname "*codium*" -o -iname "*vscode*"
+git status .
+kate .gitignore
+git add .gitignore
+git status .
+git commit -m "feat(devcontainer): orchestrate resilient, cross-platform nix-bootstrapped workspace" .devcontainer
+git push
+git diff --cached .envrc
