@@ -227,7 +227,7 @@
 
         # Core Tools (Every shell gets these)
         coreTools = with pkgs; [
-          bashInteractive coreutils bat direnv eza fd findutils git htop 
+          bashInteractive coreutils bat direnv nix-direnv eza fd findutils git htop 
           jq just less ripgrep wget yq gnugrep gnused procps ripgrep gawk
           less nano gnutar gzip diffutils
         ];
