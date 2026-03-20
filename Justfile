@@ -82,6 +82,7 @@ clean:
     rm -rf dist/ build/ *.egg-info/
     rm -rf litellm/proxy/_experimental/out
     rm -rf ui/litellm-dashboard/out ui/litellm-dashboard/node_modules ui/litellm-dashboard/.next
+    rm -f poetry.lock package-lock.json ui/litellm-dashboard/package-lock.json docs/my-website/package-lock.json enterprise/poetry.lock litellm-js/spend-logs/package-lock.json litellm-proxy-extras/poetry.lock package.json requirements.txt tests/proxy_admin_ui_tests/package-lock.json tests/proxy_admin_ui_tests/ui_unit_tests/package-lock.json
     -find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
     -find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
     -find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
@@ -143,12 +144,12 @@ sync-upstream:
 
     @echo "🛡️ Purging upstream's legacy lockfiles..."
     
-    rm -f poetry.lock package-lock.json ui/litellm-dashboard/package-lock.json docs/my-website/package-lock.json enterprise/poetry.lock litellm-js/spend-logs/package-lock.json litellm-proxy-extras/poetry.lock package.json requirements.txt tests/proxy_admin_ui_tests/package-lock.json tests/proxy_admin_ui_tests/ui_unit_tests/package-lock.json
+    just clean
     
     @echo "🔒 Regenerating native uv and bun lockfiles..."
     nix develop .#backend -c uv lock
     nix develop .#backend -c uv sync
-    just install-js
+    just build-all
     @echo "✅ Upstream synced. Run 'just test' to verify integration."
 
 # Clean up stale local branches that have been merged
