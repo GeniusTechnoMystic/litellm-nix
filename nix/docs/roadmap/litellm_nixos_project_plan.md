@@ -1,4 +1,4 @@
-# LiteLLM‑NixOS‑Container: Project Plan / Roadmap
+# LiteLLM‑Nix: Project Plan / Roadmap
 
 ## Goals and Objectives
 

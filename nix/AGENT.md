@@ -1,7 +1,7 @@
-# AGENT Overview for LiteLLM‑NixOS‑Container (nixos/)
+# AGENT Overview for LiteLLM‑Nix (nix/)
 
-Hello, agent! This `nixos/` directory belongs to the
-`litellm-nixos-container` project, whose goal is to package the
+Hello, agent! This `nix/` directory belongs to the
+`litellm-nix` project, whose goal is to package the
 [LiteLLM](https://github.com/BerriAI/litellm) proxy as a reproducible
 service for NixOS. Use this overview to understand where things live and
 how to contribute.
@@ -23,17 +23,17 @@ upstream Python code. Instead, it provides:
 
   ----------------------------------- ----------------------------------------------------------------------------------------------------------------------------------
   `flake.nix` (root)                  Defines the container build, module exports, overlay and devShells.
-  `nixos/AGENTS.md`                   **You are here**---instructions for agent tooling.
-  `nixos/README.md`                   High‑level description of the Nix packaging approach.
-  `nixos/container/container.nix`     NixOS container definition: sets up environment, volumes, ports.
-  `nixos/container/entrypoint.sh`     Entrypoint script that invokes `litellm` and handles signals.
-  `nixos/container/litellm.yaml`      Sample configuration file for provider routing and cost tracking.
-  `nixos/container/compose.yaml`      Reference Docker Compose service (optional).
-  `nixos/modules/litellm-proxy.nix`   NixOS module exposing `services.litellm` options. When enabled, this module pulls the container image and runs it under systemd.
-  `nixos/overlay/default.nix`         Overlay overriding `pkgs.litellm` to use this container build.
-  `nixos/devshell/shell.nix`          Dev environment with `uv`, `python`, `jq`, `curl`.
-  `nixos/scripts/`                    Helper scripts for building and testing the container.
-  `nixos/k8s/`                        Kubernetes manifests for deploying the proxy in k3s.
+  `nix/AGENTS.md`                   **You are here**---instructions for agent tooling.
+  `nix/README.md`                   High‑level description of the Nix packaging approach.
+  `nix/container/container.nix`     NixOS container definition: sets up environment, volumes, ports.
+  `nix/container/entrypoint.sh`     Entrypoint script that invokes `litellm` and handles signals.
+  `nix/container/litellm.yaml`      Sample configuration file for provider routing and cost tracking.
+  `nix/container/compose.yaml`      Reference Docker Compose service (optional).
+  `nix/modules/litellm-proxy.nix`   NixOS module exposing `services.litellm` options. When enabled, this module pulls the container image and runs it under systemd.
+  `nix/overlay/default.nix`         Overlay overriding `pkgs.litellm` to use this container build.
+  `nix/devshell/shell.nix`          Dev environment with `uv`, `python`, `jq`, `curl`.
+  `nix/scripts/`                    Helper scripts for building and testing the container.
+  `nix/k8s/`                        Kubernetes manifests for deploying the proxy in k3s.
   ----------------------------------- ----------------------------------------------------------------------------------------------------------------------------------
 
 ## Usage Guide
@@ -50,33 +50,33 @@ upstream Python code. Instead, it provides:
 ```
   { config, pkgs, \... }:
   {
-    imports = \[ inputs.litellm-nixos-container.nixosModules.litellm \];
+    imports = \[ inputs.litellm-nix.nixosModules.litellm \];
     services.litellm.enable = true;
     services.litellm.settings.port = 4000;
     *\# Provide API keys via sops‑nix or environment variables*
   }
 ```
-- **Customise** `litellm.yaml`: Copy `nixos/container/litellm.yaml` into
+- **Customise** `litellm.yaml`: Copy `nix/container/litellm.yaml` into
   your secrets and adjust providers, routing, cost tracking. Do not
   commit API keys.
 
 - **Development**: Enter the dev shell:
 
-  nix develop .#nixos
+  nix develop .#nix
 
   Use `build-container.sh` and `test-proxy.sh` to build and run locally.
 
 ## Contribution Guidelines
 
-- Keep packaging logic in `nixos/`; do not modify upstream code in
+- Keep packaging logic in `nix/`; do not modify upstream code in
   `upstream/` unless necessary. Pull from upstream regularly.
-- When adding features, update `nixos/README.md` and this `AGENTS.md`
+- When adding features, update `nix/README.md` and this `AGENTS.md`
   accordingly so that agents can discover new files.
 - Use descriptive commit messages
   (e.g. `feat(container): add compose file`).
 - Test builds with `nix build` before pushing. Use `nix flake check` to
   ensure the flake is valid.
 
-Thank you for contributing to the LiteLLM‑NixOS‑Container project!
+Thank you for contributing to the LiteLLM‑Nix project!
 Keeping this directory structured and well‑documented ensures that
 agents and humans alike can work effectively.

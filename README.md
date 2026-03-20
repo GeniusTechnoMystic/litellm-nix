@@ -33,7 +33,7 @@
     </a>
 </h4>
 
-# LiteLLM — NixOS Container Packaging
+# LiteLLM — NixOS Tooling
 
 ⚠️ This repository is a fork of:
 https://github.com/BerriAI/litellm
@@ -63,49 +63,6 @@ https://github.com/BerriAI/litellm
 
 This fork adds infrastructure for running LiteLLM in a
 reproducible NixOS container environment.
-
-Directory layout:
-
-```
-litellm-nixos-container
-│
-├─ README.md
-├─ LICENSE
-├─ .gitignore
-│
-├─ nixos
-│  ├─ AGENTS.md
-│  ├─ README.md
-│  ├─ flake.nix
-│  │
-│  ├─ container
-│  │  ├─ container.nix
-│  │  ├─ compose.yaml
-│  │  ├─ entrypoint.sh
-│  │  └─ litellm.yaml
-│  │
-│  ├─ docs
-│  │
-│  ├─ modules
-│  │  └─ litellm-proxy.nix
-│  │
-│  ├─ overlay
-│  │  └─ default.nix
-│  │
-│  ├─ devshell
-│  │  └─ shell.nix
-│  │
-│  ├─ scripts
-│  │  ├─ build-container.sh
-│  │  └─ test-proxy.sh
-│  │
-│  └─ k8s
-│     ├─ deployment.yaml
-│     └─ service.yaml
-│
-└─ upstream
-   └─ (LiteLLM source code from fork)
-```
 
 ---
 

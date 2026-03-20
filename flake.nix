@@ -45,11 +45,11 @@
           rustc = rust179Toolchain.toolchain;
         };
         
-        prisma-engines_5_4_2 = pkgs.callPackage ./nixos/prisma-engines-5_4_2.nix {
+        prisma-engines_5_4_2 = pkgs.callPackage ./nix/prisma-engines-5_4_2.nix {
           rustPlatform = rust179Platform;
         } ;
 
-        prisma_5_4_2 = pkgs.callPackage ./nixos/prisma-5_4_2.nix {
+        prisma_5_4_2 = pkgs.callPackage ./nix/prisma-5_4_2.nix {
           prisma-engines = prisma-engines_5_4_2;
         };
 

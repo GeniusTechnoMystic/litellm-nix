@@ -1,8 +1,8 @@
-# LiteLLM‑NixOS‑Container: Architectural Design Plan
+# LiteLLM‑Nix: Architectural Design Plan
 
 ## Purpose and Scope
 
-The **litellm‑nixos‑container** repository packages the
+The **litellm-nix** repository packages the
 [LiteLLM](https://github.com/BerriAI/litellm) project into a
 reproducible, containerised service built using Nix. Its purpose is not
 to change the core LiteLLM codebase but to:
