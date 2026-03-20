@@ -1,158 +1,16 @@
 git rm -f .nix-bash-history
-ls -la
-git add litellm-js/spend-logs/bun.lock
+rm container-listing.txt 
 git status .
-nix develop --build
+git add poetry.lock requirements.txt .nix-bash-history
+git diff --cached Justfile
+git commit Justfile -m "Do more thorough clean after sync-upstream"
 git status .
-cd
-history |grep danny |tail
-cd nixos
-nix run nixpkgs#home-manager -- switch --flake .#danny -b backup
-cd ..
-cd .config
-ls -la *codium*
-ls -la *code*
-cd  ..
-ls -la *codium* *code*
-find . -iname "*codium*" -o -iname "*vscode*"
+git commit .gitignore -m "Igore nix result folders"
+git commit nixos/docs/* -m "Add Prisma AI analysis session logs"
+git commit nixos/prisma* -m "feat(prisma): Repackage prisma 5.4.2 and prisma-engines 5.4.2 as Nix packages for use in flake.nix"
 git status .
-kate .gitignore
-git add .gitignore
+git diff --cached flake.nix
 git status .
-git commit -m "feat(devcontainer): orchestrate resilient, cross-platform nix-bootstrapped workspace" .devcontainer
+git commit flake.lock flake.nix -m "feat(prisma):Replaced Nix Prisma 5.22.0 package with custom Prisma 5.4.2 package"
 git push
-git diff --cached .envrc
-git commit .nix-bash-history requirements.txt ui/litellm-dashboard/package-lock.json
-git push
-git status .
-cd .devcontainer/
-ls
-codium *
-git status .
-git add devcontainer.json 
-devpod up litellm-nixos-container --recreate
-git status .
-cd .config
-ls
-cd VSCodium
-ls
-cd User
-ls
-codium settings.json
-systemctl --user enable --now podman.socket
-cd
-grep podman $PATH
-cd .config
-ls
-cd
-devpod --help
-devpod list
-devpod status
-devpod up litellm-nixos-container
-home-manager switch
-cd nixos
-history |grep home-manager |tail
-nix run nixpkgs#home-manager -- switch --flake .#danny -b backup
-devpod up litellm-nixos-container
-devpod up litellm-nixos-container
-cd deploy/litellm-nixos-container/
-devpod --debug up litellm-nixos-container --recreate
-clear
-git status .
-git add devcontainer.json post-create.sh 
-cd ..
-git status .
-devpod --debug up litellm-nixos-container --recreate
-ls -l .nix-bash-hsitory
-ls
-ls -la .nix-bash-hsitory
-ls -la
-git add .gitignore
-git status .
-git commit .gitignore
-git push
-git status .
-git commit .devcontainer
-git push
-git commit litellm-js/spend-logs/bun.lock
-git commit .envrc flake.nix
-git push
-git status .
-git status .
-mise install
-cat .mise.toml
-direnv reload
-pwd
-mise --help
-mise activate
-direnv reload
-ls -la
-cd ..
-ls -la
-mise --help
-mise doctor
-devpod stop .
-devpod stop .
-devpod list
-history |grep recreate |tail
-git status .
-git diff nixos/container/compose.yaml
-git add .devcontainer .envrc
-devpod up litellm-nixos-container --recreate
-devpod stop .
-devpod up litellm-nixos-container --recreate
-devpod stop .
-git status .
-git add .devcontainer
-git status .
-devpod up litellm-nixos-container --recreate
-mise trust .
-mise status
-mise list
-mist install
-mise install
-mise list
-mise status
-mise activate --help
-devpod stop .
-devpod up litellm-nixos-container --recreate
-git status .
-git add .devcontainer
-just build-all
-git status .
-git add .devcontainer/post-create.sh
-git diff --cached .envrc
-git commit
-git push
-git status .
-git diff --cached nixos/container/compose.yaml
-git diff nixos/container/compose.yaml
-zpool status
-zpool list
-gh codespace logs
-gh cs ssh
-devpod stop .
-gh cs list
-gh cs --help
-gh cs stop animated-space-winner-p6qwxgvwj726x4
-gh cs stop
-git status .
-git add .devcontainer/devcontainer.json 
-git commit 
-git push
-gh cs rebuild
-gh cs list
-gh cs --help
-gh cs delete
-devpod up litellm-nixos-container --recreate
-gh cs create
-gh cs list
-gh cs ssh
-gh cs delete
-history |grep meld
-history |grep "git.*meld"
-cd nixos/deploy/litellm-nixos-container/
-direnv allow
-cat .envrc
-codium .
 git status .
