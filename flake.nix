@@ -3,9 +3,13 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
-     # Prisma 5 engine anchor for stability (v5.22.0)
-    nixpkgs-prisma5.url = "github:nixos/nixpkgs/nixos-24.11";
+
     flake-utils.url = "github:numtide/flake-utils";
+
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     pyproject-nix = {
       url = "github:pyproject-nix/pyproject.nix";
@@ -24,12 +28,49 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-prisma5, flake-utils, uv2nix, pyproject-nix, pyproject-build-systems }:
+  outputs = { self, nixpkgs, flake-utils, uv2nix, pyproject-nix, pyproject-build-systems, fenix }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
-        pkgs-prisma5 = import nixpkgs-prisma5 { inherit system; config.allowUnfree = true; };
+        fenixPkgs = fenix.packages.${system};
+
+        rust179Toolchain = fenixPkgs.fromToolchainName {
+          name = "1.79.0";
+          #sha256 = pkgs.lib.fakeHash;
+          sha256 = "sha256-Ngiz76YP4HTY75GGdH2P+APE/DEIx2R/Dn+BwwOyzZU=";
+        };
+
+        rust179Platform = pkgs.makeRustPlatform {
+          cargo = rust179Toolchain.toolchain;
+          rustc = rust179Toolchain.toolchain;
+        };
+        
+        prisma-engines_5_4_2 = pkgs.callPackage ./nixos/prisma-engines-5_4_2.nix {
+          rustPlatform = rust179Platform;
+        } ;
+
+        prisma_5_4_2 = pkgs.callPackage ./nixos/prisma-5_4_2.nix {
+          prisma-engines = prisma-engines_5_4_2;
+        };
+
         python = pkgs.python313;
+
+        sitePackages = python.sitePackages;
+
+        prismaCliCache = pkgs.runCommand "prisma-cli-cache" {} ''
+          set -euo pipefail
+
+          mkdir -p "$out/node_modules"
+
+          # Present the Nix-packaged Prisma CLI under the exact path contract
+          # that prisma-client-py v0.11.0 expects:
+          #   $PRISMA_BINARY_CACHE_DIR/node_modules/prisma/build/index.js
+          ln -s ${prisma_5_4_2}/lib/prisma/packages/cli "$out/node_modules/prisma"
+
+          cat > "$out/package.json" <<'EOF'
+          { "name": "prisma-cache", "private": true }
+          EOF
+        '';
 
         # --- Python Dependency Resolution ---
         workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
@@ -52,26 +93,30 @@
 
         # Forensic Audit Env Mappings (v0.11.0 + v5.22.0)
         prismaEnvVars = {
-          # Engine Binaries (v0.11.0 expectations mapped to Prisma 5 Nix binaries)
-          PRISMA_QUERY_ENGINE_BINARY = "${pkgs-prisma5.prisma-engines}/bin/query-engine";
-          PRISMA_MIGRATION_ENGINE_BINARY = "${pkgs-prisma5.prisma-engines}/bin/schema-engine";
-          PRISMA_INTROSPECTION_ENGINE_BINARY = "${pkgs-prisma5.prisma-engines}/bin/query-engine";
-          PRISMA_FMT_BINARY = "${pkgs-prisma5.prisma-engines}/bin/prisma-fmt";
+          # Prisma CLI cache shim: read-only, pre-seeded, no npm install needed
+          PRISMA_BINARY_CACHE_DIR = "${prismaCliCache}";
+
+          # Engine binaries from Nix
+          PRISMA_QUERY_ENGINE_BINARY = "${prisma-engines_5_4_2}/bin/query-engine";
+          PRISMA_QUERY_ENGINE_LIBRARY = "${prisma-engines_5_4_2}/lib/libquery_engine.node";
+          PRISMA_SCHEMA_ENGINE_BINARY = "${prisma-engines_5_4_2}/bin/schema-engine";
+          #PRISMA_MIGRATION_ENGINE_BINARY = "${prisma-engines_5_4_2}/bin/schema-engine";
+          PRISMA_INTROSPECTION_ENGINE_BINARY = "${prisma-engines_5_4_2}/bin/schema-engine";
+          PRISMA_FMT_BINARY = "${prisma-engines_5_4_2}/bin/prisma-fmt";
           
           # Runtime/Node Management
-          PRISMA_USE_GLOBAL_NODE = "true";
-          PRISMA_USE_NODEJS_BIN = "true";
-          PRISMA_BINARY_CACHE_DIR = "/tmp/prisma-cache";
-          PRISMA_HOME_DIR = "/tmp/prisma-home";
-          PRISMA_NODEENV_CACHE_DIR = "/tmp/nodeenv-cache";
+          #PRISMA_USE_GLOBAL_NODE = "true";
+          #PRISMA_USE_NODEJS_BIN = "true";
+          #PRISMA_BINARY_CACHE_DIR = "/tmp/prisma-cache";
+          #PRISMA_HOME_DIR = "/tmp/prisma-home";
+          #PRISMA_NODEENV_CACHE_DIR = "/tmp/nodeenv-cache";
           
           # Metadata/Versioning
-          PRISMA_VERSION = "5.22.0";
-          PRISMA_EXPECTED_ENGINE_VERSION = "v5.22.0";
+          PRISMA_VERSION = "5.4.2";
+          PRISMA_EXPECTED_ENGINE_VERSION = "ac9d7041ed77bcc8a8dbd2ab6616b39013829574";
           
           # Shielding (Preventing modern engines from crashing during generation)
-          PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING = "1";
-          PRISMA_QUERY_ENGINE_LIBRARY = "${pkgs-prisma5.prisma-engines}/lib/libquery_engine.node";
+          #PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING = "1";
         };
 
         # --- C/C++ Runtime Libraries (Required for Backend Python modules) ---
@@ -131,7 +176,7 @@
             # 1. Bring in the pre-downloaded dependencies from the FOD
             # We copy and add write permissions because JS bundlers notoriously try to write to node_modules/.cache
             cp -r ${frontend-deps}/node_modules ./node_modules
-            chmod -R +w ./node_modules
+            chmod -R u+w ./node_modules
 
             # 🛠️ Fix hardcoded /usr/bin/env paths in node_modules binaries so they can run in the sandbox
             patchShebangs ./node_modules
@@ -157,9 +202,9 @@
         # --- The Application Artifact (Python + Prisma + UI) ---
         litellm-app = pkgs.stdenv.mkDerivation {
           pname = "litellm-app";
-          version = "1.82.2";
+          version = "1.82.3-stable";
           src = ./.;
-          nativeBuildInputs = [ pkgs.nodejs_24 pkgs.coreutils baseEnv pkgs-prisma5.prisma ];
+          nativeBuildInputs = [ pkgs.nodejs_24 pkgs.coreutils baseEnv prisma_5_4_2 ];
           buildInputs = runtimeLibs; # Added for safe Prisma generation execution inside the sandbox
           
           # We do everything in installPhase so we have a mutable target directory
@@ -167,41 +212,44 @@
 
           # In this phase, we assemble the final Python package directly into the $out destination.
           installPhase = ''
+            set -euo pipefail
+
             # Fake the home directory again so Prisma/Python caches don't crash the sandbox
             export HOME=$TMPDIR
-            mkdir -p $out
+            export PATH="${pkgs.nodejs_24}/bin:${prisma_5_4_2}/bin:$PATH"
+
+            mkdir -p "$out"
             
             # 🛠️ FIX: Copy baseEnv and explicitly add write permissions. 
             # We avoid --no-preserve=mode because it strips the "executable" bits from bin/python.
-            cp -r ${baseEnv}/* $out/
-            chmod -R +w $out/
+            cp -rL ${baseEnv}/* "$out/"
+            chmod -R u+w "$out/"
             
             # Inject Prisma environment
             ${pkgs.lib.concatStringsSep "\n" (pkgs.lib.mapAttrsToList (k: v: "export ${k}=\"${v}\"") prismaEnvVars)}
 
-            # 💉 SURGICAL PATCH: Hijack ensure_cached()
-            # Since v0.11.0 Pydantic models force PRISMA_USE_NODEJS_BIN to be a boolean,
-            # and the logic hard-checks for a specific node_modules folder layout,
-            # we physically rewrite the Python function to return our Nix store paths immediately.
-            echo "💉 Surgically patching prisma-client-py (v0.11.0) to bypass npm install loop..."
-            PRISMA_FILE=$(find $out/lib -name "prisma.py" | grep "cli/prisma.py" | head -n 1)
-            
-            # We replace the ensure_cached function with a direct return of the CLICache NamedTuple.
-            # path: points to current build dir
-            # entrypoint: absolute Nix store path to prisma CLI
-            # node: absolute Nix store path to nodejs binary
-            sed -i 's/def ensure_cached.*/def ensure_cached() -> CLICache: from pathlib import Path; from .prisma import CLICache; return CLICache(path=Path("."), entrypoint=Path("'${pkgs-prisma5.prisma}'\/bin\/prisma"), node=Path("'${pkgs.nodejs_24}'\/bin\/node"))/' $PRISMA_FILE
-
             # Generate the client INTO the new mutable site-packages
-            export PYTHONPATH=$out/lib/python3.13/site-packages
-            $out/bin/python -m prisma generate --schema=./schema.prisma
+            export PYTHONPATH="$out/${sitePackages}"
 
+            echo "Using PRISMA_BINARY_CACHE_DIR=$PRISMA_BINARY_CACHE_DIR"
+            test -f "$PRISMA_BINARY_CACHE_DIR/node_modules/prisma/build/index.js"
+            
+            # Generate Prisma Python client into the mutable copied environment
+            "$out/bin/python" -m prisma generate --schema=./schema.prisma
+            
             # Link the built UI directly into the python proxy tree
-            mkdir -p $out/lib/python3.13/site-packages/litellm/proxy/_experimental/out
-            cp -r ${frontend-build}/* $out/lib/python3.13/site-packages/litellm/proxy/_experimental/out/
+            mkdir -p "$out/${sitePackages}/litellm/proxy/_experimental/out"
+            cp -r ${frontend-build}/* "$out/${sitePackages}/litellm/proxy/_experimental/out/"
 
-            # SURGICAL PURGE: Remove vulnerable Node binaries that uv locked
-            rm -rf $out/lib/python3.13/site-packages/nodejs_wheel*
+            # Remove vulnerable wheel-bundled Node binaries after generation
+            rm -rf "$out/${sitePackages}"/nodejs_wheel*
+
+            # Normalize lib64 into lib before fixup runs
+            if [ -d "$out/lib64" ]; then
+              mkdir -p "$out/lib"
+              cp -a "$out/lib64/." "$out/lib/"
+              rm -rf "$out/lib64"
+            fi
           '';
         };
 
@@ -282,20 +330,26 @@
         packages = {
           default = litellm-app;
 
+          prisma-engines_5_4_2 = prisma-engines_5_4_2;
+          prisma_5_4_2 = prisma_5_4_2;
+
           container = pkgs.dockerTools.buildLayeredImage {
             name = "litellm";
             tag = "latest";
             maxLayers = 100;
             
             # Inject the app, runtime libs, coreutils, and our startup wrapper
-            contents = [ litellm-app startup-wrapper ] ++ runtimeLibs ++ [ pkgs.coreutils pkgs.bash ];
+            contents = 
+              [ litellm-app startup-wrapper prismaCliCache pkgs.nodejs_24 prisma_5_4_2 prisma-engines_5_4_2 ]
+              ++ runtimeLibs
+              ++ [ pkgs.coreutils pkgs.bash ];
 
             config = {
               Entrypoint = [ "${pkgs.tini}/bin/tini" "--" ];
               Cmd = [ "${startup-wrapper}/bin/start-litellm" ];
               
               Env = (pkgs.lib.mapAttrsToList (k: v: "${k}=${v}") prismaEnvVars) ++ [
-                "PATH=${litellm-app}/bin:${pkgs.lib.makeBinPath [ pkgs.coreutils pkgs.bash startup-wrapper ]}"
+                "PATH=${litellm-app}/bin:${pkgs.lib.makeBinPath [ pkgs.coreutils pkgs.bash startup-wrapper pkgs.nodejs_24 prisma_5_4_2 prisma-engines_5_4_2 ]}"
                 "LANG=C.UTF-8"
                 "LC_ALL=C.UTF-8"
                 "TZ=UTC"
@@ -344,7 +398,7 @@
           # ==========================================
           backend = pkgs.mkShell {
             # Injects upstreamPythonEnv (pytest/ruff/etc) and the native Prisma engines!
-            packages = coreTools ++ backendTools ++ runtimeLibs ++ [ upstreamPythonEnv pkgs-prisma5.prisma-engines ];
+            packages = coreTools ++ backendTools ++ runtimeLibs ++ [ upstreamPythonEnv prisma-engines_5_4_2 ];
             shellHook = sharedShellHook + ''
               echo "🐍 LiteLLM Backend Environment"
               echo "Python: $(python --version)"
