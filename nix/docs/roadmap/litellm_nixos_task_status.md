@@ -13,11 +13,11 @@ LiteLLM proxy via Nix.
 
 | Task                                                       | Status | Notes                                                                                |
 | ---------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------ |
-| Fork `BerriAI/litellm` and create `nixos-container` branch | ✅      | Completed via GitHub web interface.                                                  |
-| Explain fork purpose in `README.md`                        | ✅      | Upstream link and rationale documented.                                              |
-| Add `nixos/README.md` describing structure                 | ✅      | Completed; outlines container, module, overlay, etc.                                 |
-| Write initial `flake.nix` with container build             | ✅      | Completed using `uv2nix` and `dockerTools`.                                          |
-| Create `nixos/container/container.nix`                     | 🟡     | Partially done; needs ports, volumes and system options.                             |
+| Fork `BerriAI/litellm` and create `nixos-container` branch | ✅      | Completed via GitHub web interface.                                                 |
+| Explain fork purpose in `README.md`                        | ✅      | Upstream link and rationale documented.                                             |
+| Add `nix/README.md` describing structure                   | ✅      | Completed; outlines container, module, overlay, etc.                                |
+| Write initial `flake.nix` with container build             | ✅      | Completed using `uv2nix` and `dockerTools`.                                         |
+| Create `nix/container/container.nix`                       | 🟡     | Partially done; needs ports, volumes and system options.                             |
 | Write `entrypoint.sh` to launch proxy                      | 🔜     | Not yet implemented; will call `litellm` CLI via `tini`.                             |
 | Draft sample `litellm.yaml` config                         | 🟡     | Basic structure sketched; needs provider entries.                                    |
 | Provide `compose.yaml` for Docker Compose                  | 🔜     | Not started; replicate container settings for non-Nix deployments.                   |

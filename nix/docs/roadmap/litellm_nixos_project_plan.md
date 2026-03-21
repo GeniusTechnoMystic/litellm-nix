@@ -14,31 +14,31 @@
 
 ### M1: Repository Setup (status: Complete)
 
-| Task                                                                 | Status      | Notes                                                                  |
-| -------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------- |
-| Fork upstream `BerriAI/litellm` and create `nixos-container` branch  | ✅ Completed | `GeniusTechnoMystic/litellm-nixos-container` created.                  |
+| Task                                                                 | Status       | Notes                                                                  |
+| -------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------- |
+| Fork upstream `BerriAI/litellm` and create `nixos-container` branch  | ✅ Completed | `GeniusTechnoMystic/litellm-nix` created.                              |
 | Write `README.md` explaining purpose of fork and linking to upstream | ✅ Completed | Clarifies that the fork provides packaging, not feature changes.       |
-| Outline directory structure in `nixos/README.md`                     | ✅ Completed | Shows container, module, overlay, devshell, scripts and k8s dirs.      |
+| Outline directory structure in `nix/README.md`                       | ✅ Completed | Shows container, module, overlay, devshell, scripts and k8s dirs.      |
 | Add initial `flake.nix` with container build skeleton                | ✅ Completed | Uses `uv2nix` to build Python env and `dockerTools` to assemble image. |
 
 ### M2: Container and Module Definition (current)
 
 | Task                                                                                                       | Status         | Notes                                                                                      |
 | ---------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------ |
-| Create `nixos/container/container.nix` defining a NixOS container specification (ports, volumes, networks) | 🟡 In progress | Should set `services.litellm.enable = true` and mount `/etc/litellm.yaml`.                 |
-| Write `nixos/container/entrypoint.sh` to launch `litellm` with config                                      | 🔜 Not started | Use `tini` for PID 1; pass through environment variables.                                  |
-| Draft `nixos/container/litellm.yaml` with sample provider config and routing                               | 🟡 In progress | Should illustrate cost-based routing and placeholder for API keys.                         |
-| Provide `nixos/container/compose.yaml` as reference for Docker Compose                                     | 🔜 Not started | Map port 4000; mount config; set restart policy.                                           |
-| Implement NixOS module in `nixos/modules/litellm-proxy.nix`                                                | 🔜 Not started | Expose `services.litellm.*` options, pulling container image and running it under systemd. |
-| Add overlay `nixos/overlay/default.nix` to supply `litellm` package                                        | 🔜 Not started | Should call `flake.inputs.self.packages.<system>.container`.                               |
+| Create `nix/container/container.nix` defining a NixOS container specification (ports, volumes, networks)   | 🟡 In progress | Should set `services.litellm.enable = true` and mount `/etc/litellm.yaml`.                 |
+| Write `nix/container/entrypoint.sh` to launch `litellm` with config                                        | 🔜 Not started | Use `tini` for PID 1; pass through environment variables.                                  |
+| Draft `nix/container/litellm.yaml` with sample provider config and routing                                 | 🟡 In progress | Should illustrate cost-based routing and placeholder for API keys.                         |
+| Provide `nix/container/compose.yaml` as reference for Docker Compose                                       | 🔜 Not started | Map port 4000; mount config; set restart policy.                                           |
+| Implement NixOS module in `nix/modules/litellm-proxy.nix`                                                  | 🔜 Not started | Expose `services.litellm.*` options, pulling container image and running it under systemd. |
+| Add overlay `nix/overlay/default.nix` to supply `litellm` package                                          | 🔜 Not started | Should call `flake.inputs.self.packages.<system>.container`.                               |
 
 ### M3: Development Tools
 
-- **DevShell**: Provide `nixos/devshell/shell.nix` that offers a shell
+- **DevShell**: Provide `nix/devshell/shell.nix` that offers a shell
   with `uv`, `python`, `jq`, `curl` for debugging the container.
   Status: not started.
 
-- **Scripts**: Write helper scripts under `nixos/scripts/`:
+- **Scripts**: Write helper scripts under `nix/scripts/`:
   
   - `build-container.sh`: builds the container and tags it.
   - `test-proxy.sh`: runs the proxy locally using the built image
@@ -46,7 +46,7 @@
 
 ### M4: Deployment Templates
 
-- **Kubernetes manifests**: Write `nixos/k8s/deployment.yaml` and
+- **Kubernetes manifests**: Write `nix/k8s/deployment.yaml` and
   `service.yaml` to deploy the proxy into k3s. Include resource
   limits, environment variables, ConfigMap/Secret usage. Status: not
   started.
@@ -64,12 +64,12 @@
 ## Process and Workflow
 
 1. **Work on a feature branch**: for each task, create a branch from
-   `nixos-container`. Make changes in `nixos/` subfolders.
+   `nixos-container`. Make changes in `nix/` subfolders.
 2. **Run local builds**: `nix build .#packages.x86_64-linux.container`
    to build the image; run `./result/bin/docker-load` to load it into
    Docker; test via `docker run` or `compose`. Optionally run
    `nix develop` to enter dev shell.
-3. **Write docs**: update `nixos/README.md` and `nixos/AGENTS.md` to
+3. **Write docs**: update `nix/README.md` and `nix/AGENTS.md` to
    describe new files and usage.
 4. **Commit and push**: keep commit messages descriptive
    (e.g. `feat(module): add NixOS module for LiteLLM`).

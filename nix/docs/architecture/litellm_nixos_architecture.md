@@ -75,12 +75,12 @@ Under the hood the module will:
 - Create a `systemd` service to run the container with proper
   networking and volume mounts.
 - Provide a `liteLLM.yaml` template in
-  `/nixos/litellm-nixos-container/container/litellm.yaml` that defines
+  `litellm-nix/nix/container/litellm.yaml` that defines
   providers, routing, cost tracking and context windows.
 
 ### Overlay
 
-A small overlay in `nixos/overlay/default.nix` overrides the `litellm`
+A small overlay in `nix/overlay/default.nix` overrides the `litellm`
 package in `pkgs` with the one built from this flake. This allows others
 to write:
 
@@ -93,7 +93,7 @@ to write:
 
 ### Deployment Manifests
 
-- **container.nix** under `nixos/container` describes the container
+- **container.nix** under `nix/container` describes the container
   environment using NixOS container definitions; it sets up
   networking, volumes (e.g. /var/lib/litellm for logs), and exposes
   port 4000.
@@ -141,7 +141,7 @@ Within this repo (on the `nixos-container` branch), the layout is:
 .
 ├── README.md \# explains the purpose of the fork and points to upstream
 ├── flake.nix \# builds the container image and defines outputs
-├── nixos/
+├── nix/
 │   ├── AGENTS.md \# instructions for agent tooling
 │   ├── README.md \# high‑level explanation of the Nix packaging
 │   ├── container/
