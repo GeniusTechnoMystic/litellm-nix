@@ -1,4 +1,3 @@
-
 __pycache__/
 !.github/observatory/litellm_config.yaml
 .aider*
@@ -9,7 +8,6 @@ __pycache__/
 .devpod-internal/
 .direnv
 .env
-.gitignore
 .idea/
 .langfuse.log
 .mypy_cache/*
