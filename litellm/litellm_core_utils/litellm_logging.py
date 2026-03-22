@@ -84,6 +84,8 @@ from litellm.types.llms.openai import (
     OpenAIModerationResponse,
     ResponseAPIUsage,
     ResponseCompletedEvent,
+    ResponseFailedEvent,
+    ResponseIncompleteEvent,
     ResponsesAPIResponse,
 )
 from litellm.types.mcp import MCPPostCallResponseObject
@@ -515,6 +517,23 @@ class Logging(LiteLLMLoggingBaseClass):
                 kwargs or {}
             ),
         )
+
+    def get_router_model_id(self) -> Optional[str]:
+        """Extract the router deployment model_id from litellm_params.
+
+        Checks both litellm_metadata and metadata for model_info.id.
+        Used by cost calculators to look up custom pricing registered
+        under the deployment's model_info.id in litellm.model_cost.
+        """
+        if not hasattr(self, "litellm_params"):
+            return None
+        for key in ("litellm_metadata", "metadata"):
+            meta = self.litellm_params.get(key, {}) or {}
+            info = meta.get("model_info", {}) or {}
+            model_id = info.get("id")
+            if model_id is not None:
+                return model_id
+        return None
 
     def update_environment_variables(
         self,
@@ -1458,14 +1477,8 @@ class Logging(LiteLLMLoggingBaseClass):
         # Fallback: extract router_model_id from litellm_params when not available
         # from the result object. ResponsesAPIResponse objects (used by /v1/responses
         # streaming) don't carry _hidden_params["model_id"] like ModelResponse does.
-        if router_model_id is None and hasattr(self, "litellm_params"):
-            for metadata_key in ("litellm_metadata", "metadata"):
-                _metadata: dict = self.litellm_params.get(metadata_key, {}) or {}
-                _model_info: dict = _metadata.get("model_info", {}) or {}
-                _model_id = _model_info.get("id")
-                if _model_id is not None:
-                    router_model_id = _model_id
-                    break
+        if router_model_id is None:
+            router_model_id = self.get_router_model_id()
 
         ## RESPONSE COST ##
         custom_pricing = use_custom_pricing_for_model(
@@ -1672,6 +1685,30 @@ class Logging(LiteLLMLoggingBaseClass):
                     endpoint=self.model_call_details.get("endpoint", ""),
                 )
         return logging_result
+
+    def _merge_hidden_params_from_response_into_metadata(
+        self, logging_result: Any
+    ) -> None:
+        """
+        Copy response._hidden_params into litellm_params.metadata['hidden_params'].
+
+        Non-streaming success uses _process_hidden_params_and_response_cost (skipped when
+        stream=True). Streaming assembles the full response later; without this merge,
+        OTEL/callbacks that read metadata.hidden_params miss cost-related fields.
+        """
+        if logging_result is None:
+            return
+        hidden_params = getattr(logging_result, "_hidden_params", None)
+        if not hidden_params:
+            return
+        if self.model_call_details.get("litellm_params") is None:
+            return
+        self.model_call_details["litellm_params"].setdefault("metadata", {})
+        if self.model_call_details["litellm_params"]["metadata"] is None:
+            self.model_call_details["litellm_params"]["metadata"] = {}
+        self.model_call_details["litellm_params"]["metadata"][
+            "hidden_params"
+        ] = getattr(logging_result, "_hidden_params", {})
 
     def _process_hidden_params_and_response_cost(
         self,
@@ -1997,6 +2034,9 @@ class Logging(LiteLLMLoggingBaseClass):
                 self.model_call_details[
                     "response_cost"
                 ] = self._response_cost_calculator(result=complete_streaming_response)
+                self._merge_hidden_params_from_response_into_metadata(
+                    complete_streaming_response
+                )
                 ## STANDARDIZED LOGGING PAYLOAD
                 self.model_call_details[
                     "standard_logging_object"
@@ -2531,6 +2571,10 @@ class Logging(LiteLLMLoggingBaseClass):
                     f"Model={self.model} not found in completion cost map. Setting 'response_cost' to None"
                 )
                 self.model_call_details["response_cost"] = None
+
+            self._merge_hidden_params_from_response_into_metadata(
+                complete_streaming_response
+            )
 
             ## STANDARDIZED LOGGING PAYLOAD
             self.model_call_details[
@@ -3318,7 +3362,10 @@ class Logging(LiteLLMLoggingBaseClass):
             return result
         elif isinstance(result, TextCompletionResponse):
             return result
-        elif isinstance(result, ResponseCompletedEvent):
+        elif isinstance(
+            result,
+            (ResponseCompletedEvent, ResponseIncompleteEvent, ResponseFailedEvent),
+        ):
             ## return unified Usage object
             if isinstance(result.response.usage, ResponseAPIUsage):
                 transformed_usage = (
@@ -3339,7 +3386,6 @@ class Logging(LiteLLMLoggingBaseClass):
             return result.response
         else:
             return None
-        return None
 
     def _handle_anthropic_messages_response_logging(self, result: Any) -> ModelResponse:
         """

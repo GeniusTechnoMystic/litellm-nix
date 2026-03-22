@@ -1878,28 +1878,33 @@ class ProxyLogging:
             )
 
             input: Union[list, str, dict] = ""
+            normalized_call_type: Optional[str] = None
             if "messages" in request_data and isinstance(
                 request_data["messages"], list
             ):
                 input = request_data["messages"]
                 litellm_logging_obj.model_call_details["messages"] = input
                 if litellm_logging_obj.call_type != CallTypes.pass_through.value:
-                    litellm_logging_obj.call_type = CallTypes.acompletion.value
+                    normalized_call_type = CallTypes.acompletion.value
             elif "prompt" in request_data and isinstance(request_data["prompt"], str):
                 input = request_data["prompt"]
                 litellm_logging_obj.model_call_details["prompt"] = input
                 if litellm_logging_obj.call_type != CallTypes.pass_through.value:
-                    litellm_logging_obj.call_type = CallTypes.atext_completion.value
+                    normalized_call_type = CallTypes.atext_completion.value
             elif "input" in request_data and isinstance(request_data["input"], list):
                 input = request_data["input"]
                 litellm_logging_obj.model_call_details["input"] = input
                 if litellm_logging_obj.call_type != CallTypes.pass_through.value:
-                    litellm_logging_obj.call_type = CallTypes.aembedding.value
+                    normalized_call_type = CallTypes.aembedding.value
+            if normalized_call_type is not None:
+                litellm_logging_obj.call_type = normalized_call_type
+                litellm_logging_obj.model_call_details[
+                    "call_type"
+                ] = normalized_call_type
             # Pass-through endpoints are logged via the callback loop's
             # async_post_call_failure_hook — skip pre_call and failure handlers.
             if litellm_logging_obj.call_type == CallTypes.pass_through.value:
                 return
-
             litellm_logging_obj.pre_call(
                 input=input,
                 api_key="",
@@ -1917,6 +1922,7 @@ class ProxyLogging:
                     original_exception,
                     traceback.format_exc(),
                 ),
+                daemon=True,
             ).start()
 
     async def post_call_success_hook(
@@ -4005,13 +4011,15 @@ class PrismaClient:
             )
 
             async def _do_direct_reconnect() -> None:
+                old_pid = self._get_engine_pid()
                 try:
                     await self.db.disconnect()
                 except Exception as disconnect_err:
-                    verbose_proxy_logger.debug(
-                        "Prisma DB disconnect before reconnect failed (ignored): %s",
+                    verbose_proxy_logger.warning(
+                        "Prisma DB disconnect before reconnect failed: %s",
                         disconnect_err,
                     )
+                    await PrismaWrapper._kill_engine_process(old_pid)
 
                 await self.db.connect()
                 await self.db.query_raw("SELECT 1")
