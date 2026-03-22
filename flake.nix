@@ -398,7 +398,7 @@
           # ==========================================
           backend = pkgs.mkShell {
             # Injects upstreamPythonEnv (pytest/ruff/etc) and the native Prisma engines!
-            packages = coreTools ++ backendTools ++ runtimeLibs ++ [ upstreamPythonEnv prisma-engines_5_4_2 ];
+            packages = coreTools ++ backendTools ++ runtimeLibs ++ [ upstreamPythonEnv prisma_5_4_2 prisma-engines_5_4_2 ];
             shellHook = sharedShellHook + ''
               echo "🐍 LiteLLM Backend Environment"
               echo "Python: $(python --version)"
