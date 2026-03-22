@@ -1,16 +1,45 @@
-# LiteLLM‑Nix: Project Plan / Roadmap
+# LiteLLM-Nix Project Plan
 
-## Goals and Objectives
+This roadmap describes the current direction of the Nix layer in this fork.
 
-1. **Package LiteLLM** into a deterministic Nix build that produces a
+It is intentionally conservative: the primary goal is to keep the fork
+useful and coherent without making upstream LiteLLM merges painful.
+
+## Primary Goals
+
+1. Package LiteLLM into a deterministic Nix build that produces a
    Docker/OCI image and a reusable NixOS module.
-2. **Allow seamless integration** of the LiteLLM proxy into the
-   home‑AI‑lab stack via flakes and modules.
-3. **Enable flexible deployment** through Docker Compose and Kubernetes
-   manifests.
-4. **Track upstream changes** and keep the package up to date.
+2. Provide practical Nix developer tooling and container deployment assets.   
+3. Allow seamless integration of the LiteLLM proxy into the    home‑AI‑lab stack via flakes and modules.
+4. Enable flexible deployment through Docker Compose and Kubernetes manifests.
+5. Track upstream changes and keep the package up to date.
+6. Apply Software Engineering best-practice patterns to project organization, design, development and deployment processes.
+7. Apply best-of-breed, emergent Software Engineering & Development tooling.
 
-## Milestones & Tasks
+## Secondary Goals
+
+1. Keep upstream LiteLLM as the product source of truth.
+2. Keep docs accurate enough that humans and AI agents can trust them.
+
+## Current Baseline
+
+Already implemented:
+
+- Root-flake-based build pipeline
+- Custom Prisma 5.4.2 packaging
+- Deterministic frontend build
+- OCI image build
+- Startup wrapper for the packaged image
+- Compose deployment example
+- Multiple Nix dev shells
+
+Not yet implemented:
+
+- NixOS module
+- Overlay exports
+- Kubernetes manifests
+
+## Milestones
 
 ### M1: Repository Setup (status: Complete)
 
@@ -25,24 +54,18 @@
 
 | Task                                                                                                       | Status         | Notes                                                                                      |
 | ---------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------ |
-| Create `nix/container/container.nix` defining a NixOS container specification (ports, volumes, networks)   | 🟡 In progress | Should set `services.litellm.enable = true` and mount `/etc/litellm.yaml`.                 |
-| Write `nix/container/entrypoint.sh` to launch `litellm` with config                                        | 🔜 Not started | Use `tini` for PID 1; pass through environment variables.                                  |
-| Draft `nix/container/litellm.yaml` with sample provider config and routing                                 | 🟡 In progress | Should illustrate cost-based routing and placeholder for API keys.                         |
-| Provide `nix/container/compose.yaml` as reference for Docker Compose                                       | 🔜 Not started | Map port 4000; mount config; set restart policy.                                           |
+| Create `nix/container/container.nix` defining a NixOS container specification (ports, volumes, networks)   | N/A | Moved into main root flake.                 |
+| Write `nix/container/entrypoint.sh` to launch `litellm` with config                                        | N/A | Developed, but have moved code into main root nix flake.|
+| Draft `nix/container/litellm.yaml` with sample provider config and routing                                 | 🟡 In progress | Currently at `nix/container/state/.config/litellm/config.yaml`                         |
+| Provide `nix/container/compose.yaml` as reference for Docker Compose                                       | 🟡 In progress | Need to update now that the entrypoint script is embedded in the container itself.|
 | Implement NixOS module in `nix/modules/litellm-proxy.nix`                                                  | 🔜 Not started | Expose `services.litellm.*` options, pulling container image and running it under systemd. |
 | Add overlay `nix/overlay/default.nix` to supply `litellm` package                                          | 🔜 Not started | Should call `flake.inputs.self.packages.<system>.container`.                               |
 
 ### M3: Development Tools
 
-- **DevShell**: Provide `nix/devshell/shell.nix` that offers a shell
-  with `uv`, `python`, `jq`, `curl` for debugging the container.
-  Status: not started.
+- **DevShells**: Have created multiple devshells in the root flake.nix for frontend, backend, CI/SecOps and fullstack. Status: Completed.
 
-- **Scripts**: Write helper scripts under `nix/scripts/`:
-  
-  - `build-container.sh`: builds the container and tags it.
-  - `test-proxy.sh`: runs the proxy locally using the built image
-    and sample config.
+- **Scripts**: Have moved helper scripts in to root Justfile. TODO: check all make file functions moved into Justfile and tidied up.
 
 ### M4: Deployment Templates
 
@@ -56,35 +79,19 @@
 ### M5: Upstream Synchronisation
 
 - Add script to check for new releases of `litellm`; update
-  `requirements.lock` automatically and bump version in `flake.nix`.
+  `pyproject.toml` automatically and bump version in `flake.nix`.
 - Document upgrade workflow in `doc/UPDATING.md` (e.g. run
   `uv pip compile -o requirements.lock` then
   `nix flake lock --update-input`).
 
-## Process and Workflow
-
-1. **Work on a feature branch**: for each task, create a branch from
-   `nixos-container`. Make changes in `nix/` subfolders.
-2. **Run local builds**: `nix build .#packages.x86_64-linux.container`
-   to build the image; run `./result/bin/docker-load` to load it into
-   Docker; test via `docker run` or `compose`. Optionally run
-   `nix develop` to enter dev shell.
-3. **Write docs**: update `nix/README.md` and `nix/AGENTS.md` to
-   describe new files and usage.
-4. **Commit and push**: keep commit messages descriptive
-   (e.g. `feat(module): add NixOS module for LiteLLM`).
-5. **Pull request**: open PR against `nixos-container` branch;
-   self‑review; merge after tests pass.
-
 ## Risks & Mitigation
 
 - **Drift from upstream**: if upstream LiteLLM changes its CLI or
-  config, the container may break. Mitigation: lock dependencies in
-  `requirements.lock`, monitor upstream release notes, update
-  promptly.
+  config, the container may break. Mitigation: monitor upstream release notes, update promptly.
 - **Secrets management**: misconfiguring API keys may leak them into
   the image. Mitigation: never bake keys into the image; mount them
   via environment variables or secrets; document clearly.
 - **Flake complexity**: Nix flakes can be hard to debug. Mitigation:
   keep the flake simple; break logic into separate files; test
   frequently.
+

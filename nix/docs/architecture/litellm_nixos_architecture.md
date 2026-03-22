@@ -1,176 +1,155 @@
-# LiteLLM‑Nix: Architectural Design Plan
+# LiteLLM-Nix Architecture
 
-## Purpose and Scope
+## Purpose
 
-The **litellm-nix** repository packages the
-[LiteLLM](https://github.com/BerriAI/litellm) project into a
-reproducible, containerised service built using Nix. Its purpose is not
-to change the core LiteLLM codebase but to:
+`litellm-nix` is a fork of upstream [LiteLLM](https://github.com/BerriAI/litellm) that adds a reproducible Nix-based packaging and deployment layer.
 
-- Build an **OCI image** using `nixpkgs` and `dockerTools`, embedding
+The fork is intentionally narrow in scope:
+
+- keep upstream LiteLLM application code as intact as possible
+- build a Nix-native development and container workflow around it
+- build an **OCI image** using `nixpkgs` and `dockerTools`, embedding
   the Python environment, proxy server and dependencies.
-- Provide a **NixOS module** to enable and manage the proxy as a
-  system service.
-- Offer an **overlay** so that Nixpkgs users can pull the package via
-  the `litellm` attribute.
-- Supply **deployment manifests** for Docker Compose and optional k3s.
+- make the proxy easier to run in homelab and declarative environments
 
-This design ensures that the proxy can run in an air‑gapped homelab and
-easily integrate with NixOS infrastructure.
+This document describes the architecture that actually exists today, and separates that from future work.
 
-## High‑Level Architecture
+## Implemented Architecture
 
-The container itself is simple: it runs the **LiteLLM proxy server**
-along with any runtime dependencies. The design focuses on
-reproducibility, configuration and integration.
+### 1. Root Flake as the Build Orchestrator
+
+The authoritative Nix entrypoint is the root `flake.nix`.
+
+It is responsible for:
+
+- creating Python environments with `uv2nix` and `pyproject-nix`
+- packaging custom Prisma 5.4.2 engines and CLI
+- building the dashboard frontend in a deterministic two-stage flow
+- assembling a final application output
+- producing an OCI image with `dockerTools.buildLayeredImage`
+- exposing multiple development shells
+
+### 2. Custom Prisma Packaging
+
+The root flake depends on two custom derivations:
+
+- `nix/prisma-engines-5_4_2.nix/`
+- `nix/prisma-5_4_2.nix/`
+
+These exist because upstream LiteLLM currently depends on
+`prisma-client-py` v0.11.x, which expects Prisma 5.4.2-era behavior,
+while current nixpkgs Prisma packages are newer.
+
+The custom packages let the fork stay closer to upstream Python
+dependencies while still building in a Nix-friendly way.
+
+### 3. Frontend Build Pipeline
+
+The dashboard in `ui/litellm-dashboard/` is built in two stages:
+
+1. a fixed-output derivation fetches dependencies
+2. an offline build consumes those dependencies and emits static output
+
+That output is copied into LiteLLM's proxy UI path during the final app
+assembly step.
+
+### 4. Final Application Output
+
+The root flake assembles a final app artifact that contains:
+
+- the runtime Python environment
+- generated Prisma client code
+- the built proxy UI
+- runtime libraries needed by the packaged application
+
+From there, the flake builds an OCI image and a small startup wrapper
+that can optionally run Prisma migrations before launching
+`python -m litellm`.
+
+### 5. Runtime and Deployment Assets
+
+The Nix layer currently includes:
+
+- `nix/container/compose.yaml`
+- `nix/container/entrypoint.sh`
+- `nix/prisma/migrate.sh`
+
+The Compose file is the main concrete deployment example in this fork
+today. It wires in secrets, host services such as PostgreSQL and
+Qdrant, and the runtime environment expected by LiteLLM.
+
+## Current Architecture Diagram
 
 ```mermaid
 flowchart TB
 
-subgraph OCI["OCI Container Image"]
-    PY["Python Runtime (uv / pip / venv)"]
-    LLM["LiteLLM Proxy OpenAI-compatible API"]
-    CFG["Configuration API keys / routing"]
+    subgraph Build["Nix Build Layer"]
+        RootFlake["root flake.nix"]
+        PyEnv["uv2nix / pyproject-nix Python envs"]
+        Prisma["custom Prisma 5.4.2 packages"]
+        Frontend["deterministic frontend build"]
+        App["litellm-app output"]
+        Image["OCI image"]
+    end
 
-    PY --> LLM
-    CFG --> LLM
-end
+    subgraph Runtime["Runtime Layer"]
+        Wrapper["startup wrapper / entrypoint"]
+        Proxy["LiteLLM proxy"]
+        DB["PostgreSQL / Prisma schema"]
+        UI["embedded static dashboard"]
+    end
+
+    RootFlake --> PyEnv
+    RootFlake --> Prisma
+    RootFlake --> Frontend
+    PyEnv --> App
+    Prisma --> App
+    Frontend --> App
+    App --> Image
+    Image --> Wrapper
+    Wrapper --> Proxy
+    Proxy --> DB
+    Proxy --> UI
 ```
 
-### Container Build Workflow
+## Current Repository Layout for the Nix Layer
 
-1. **Python environment**: The flake uses the `uv2nix` machinery to
-   build a deterministic Python environment from `requirements.lock`.
-   It ensures that the exact versions of `litellm` and dependencies are
-   installed.
-2. **Docker image**: `pkgs.dockerTools.buildLayeredImage` assembles
-   layers: base (e.g. alpine / busybox), Python environment,
-   application code and `entrypoint.sh`. The result is an OCI image
-   with minimal size and no hidden network fetches.
-3. **Entrypoint**: A simple `entrypoint.sh` calls `litellm` with the
-   config file and passes through environment variables. A small init
-   system (`tini`) reaps zombie processes.
-4. **Configuration**: The container reads `/etc/litellm.yaml` for
-   routing rules (providers, API keys, context windows). Keys are
-   injected via environment variables or mounted secrets.
-
-### NixOS Module
-
-The module exposes a `services.litellm` option that can be enabled with:
-
-```nix
-    services.litellm.enable = true;
-    services.litellm.settings = {
-    port = 4000;
-    configFile = \"/etc/litellm.yaml\";
-        logLevel = \"info\";
-        *\# optional: environment variables (API keys) loaded via sops*
-    };
+```text
+nix/
+├── AGENT.md
+├── container/
+│   ├── compose.yaml
+│   ├── entrypoint.sh
+│   └── state/
+├── docs/
+│   ├── architecture/
+│   ├── diagrams/
+│   └── roadmap/
+├── modules/
+├── overlay/
+├── prisma/
+│   ├── migrate.sh
+│   └── prisma_migration.py
+├── prisma-5_4_2.nix/
+├── prisma-engines-5_4_2.nix/
+└── flake-old.nix
 ```
 
-Under the hood the module will:
+## Planned Architecture
 
-- Pull the container image via `pkgs.dockerTools.buildLayeredImage` or
-  from a registry.
-- Create a `systemd` service to run the container with proper
-  networking and volume mounts.
-- Provide a `liteLLM.yaml` template in
-  `litellm-nix/nix/container/litellm.yaml` that defines
-  providers, routing, cost tracking and context windows.
+The following are still planned or optional, not current implementation:
 
-### Overlay
+- Provide a **NixOS module** under `nix/modules/` to enable and manage the proxy as a system service.
+- Offer an **overlay** so that Nixpkgs users can pull the package via
+  the `pkgs.litellm` attribute. 
+- Supply **deployment manifests** for Docker Compose and optional k3s.
 
-A small overlay in `nix/overlay/default.nix` overrides the `litellm`
-package in `pkgs` with the one built from this flake. This allows others
-to write:
+These should be described as future work unless the corresponding files actually exist.
 
-```nix
-{ pkgs, \... }:
-{
-    environment.systemPackages = \[ pkgs.litellm \];
-}
-```
+## Design Constraints
 
-### Deployment Manifests
-
-- **container.nix** under `nix/container` describes the container
-  environment using NixOS container definitions; it sets up
-  networking, volumes (e.g. /var/lib/litellm for logs), and exposes
-  port 4000.
-- **compose.yaml** provides a reference Docker Compose service for
-  development outside of NixOS. It defines environment variables,
-  mounts the config file, and sets restart policies.
-- **k8s/** holds a `deployment.yaml` and `service.yaml` for deploying
-  the proxy into a Kubernetes cluster; it sets resource limits,
-  environment variables and secrets via ConfigMaps and Secrets.
-
-### Configuration File
-
-`litellm.yaml` contains routing and pricing configuration. Example
-skeleton:
-
-```yaml
-model_list:
-- name: openai/gpt-3.5-turbo
-  max_tokens: 4096
-  api_base: https://api.openai.com/v1
-- name: together/gpt-3.5-turbo
-  max_tokens: 4096
-  api_base: https://api.together.xyz/v1
-
-router:
-    strategy: cost_based
-
-    order:
-    - openai/gpt-3.5-turbo
-    - together/gpt-3.5-turbo
-
-    cost_tracking:
-    - enable: true
-    - currency: USD
-```
-
-Secrets (API keys) must **not** be stored in this file; they are
-provided via environment variables or NixOS secrets.
-
-## Directory Structure
-
-Within this repo (on the `nixos-container` branch), the layout is:
-
-```
-.
-├── README.md \# explains the purpose of the fork and points to upstream
-├── flake.nix \# builds the container image and defines outputs
-├── nix/
-│   ├── AGENTS.md \# instructions for agent tooling
-│   ├── README.md \# high‑level explanation of the Nix packaging
-│   ├── container/
-│   │   ├── container.nix
-│   │   ├── entrypoint.sh
-│   │   ├── litellm.yaml
-│   │   └── compose.yaml
-│   ├── modules/
-│   │   └── litellm-proxy.nix
-│   ├── overlay/
-│   │   └── default.nix
-│   ├── devshell/
-│   │   └── shell.nix
-│   ├── scripts/
-│   │   ├── build-container.sh
-│   │   └── test-proxy.sh
-│   └── k8s/
-│       ├── deployment.yaml
-│       └── service.yaml
-└── upstream/ \# upstream LiteLLM source (forked)
-```
-
-## Future Directions
-
-- **Version tracking**: automatically monitor upstream
-  `BerriAI/litellm` releases; update `requirements.lock` and container
-  image in CI.
-- **Custom providers**: add modules or overlay definitions for local
-  models (e.g. Mistral, LM Studio) and route them via LiteLLM.
-- **Observability**: integrate Prometheus exporter into the container
-  (e.g. export token counts and error rates). Use a NixOS module to
-  collect these metrics.
+- Keep the fork close to upstream LiteLLM to reduce merge pain.
+- Prefer packaging-layer fixes over application-layer divergence.
+- Treat `nix/flake-old.nix` as a legacy reference, not the active design.
+- Keep documentation aligned with the real tree so both humans and AI
+  agents can trust it.

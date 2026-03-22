@@ -1,82 +1,108 @@
-# AGENT Overview for LiteLLM‑Nix (nix/)
+# AGENT Overview for `nix/`
 
-Hello, agent! This `nix/` directory belongs to the
-`litellm-nix` project, whose goal is to package the
-[LiteLLM](https://github.com/BerriAI/litellm) proxy as a reproducible
-service for NixOS. Use this overview to understand where things live and
-how to contribute.
+This directory contains the Nix-specific packaging, deployment assets,
+and design notes for the `litellm-nix` fork.
 
-## Purpose
+The upstream LiteLLM application code still lives in the normal project
+tree (`litellm/`, `tests/`, `ui/`, etc.). The purpose of this folder is
+to make that upstream project easier to build and run in a reproducible
+Nix-centric environment.
 
-This directory contains Nix expressions and deployment assets for
-building and running the LiteLLM proxy. It does **not** modify the
-upstream Python code. Instead, it provides:
+## What Is Authoritative
 
-- A NixOS container definition for running the proxy in a homelab.
-- A NixOS module to enable the proxy as a system service.
-- An overlay to make the packaged proxy available as `pkgs.litellm`.
-- Deployment templates (Compose and Kubernetes) for non‑Nix
-  environments.
-- Developer tooling (dev shell and scripts).
+- The root `flake.nix` is the current source of truth for Nix builds.
+- `nix/prisma-engines-5_4_2.nix/` and `nix/prisma-5_4_2.nix/` contain
+  the custom Prisma packaging used by the root flake.
+- `nix/container/compose.yaml` and `nix/container/entrypoint.sh` are the
+  most concrete deployment artifacts currently present in `nix/`.
+- `nix/docs/roadmap/litellm_nixos_task_status.md` is the best quick
+  status snapshot.
+- `nix/flake.nix` is a legacy prototype. It is not the active build
+  path, but it may still contain ideas worth reusing later.
 
-## Directory Layout
+## What This Directory Currently Contains
 
-  ----------------------------------- ----------------------------------------------------------------------------------------------------------------------------------
-  `flake.nix` (root)                  Defines the container build, module exports, overlay and devShells.
-  `nix/AGENTS.md`                   **You are here**---instructions for agent tooling.
-  `nix/README.md`                   High‑level description of the Nix packaging approach.
-  `nix/container/container.nix`     NixOS container definition: sets up environment, volumes, ports.
-  `nix/container/entrypoint.sh`     Entrypoint script that invokes `litellm` and handles signals.
-  `nix/container/litellm.yaml`      Sample configuration file for provider routing and cost tracking.
-  `nix/container/compose.yaml`      Reference Docker Compose service (optional).
-  `nix/modules/litellm-proxy.nix`   NixOS module exposing `services.litellm` options. When enabled, this module pulls the container image and runs it under systemd.
-  `nix/overlay/default.nix`         Overlay overriding `pkgs.litellm` to use this container build.
-  `nix/devshell/shell.nix`          Dev environment with `uv`, `python`, `jq`, `curl`.
-  `nix/scripts/`                    Helper scripts for building and testing the container.
-  `nix/k8s/`                        Kubernetes manifests for deploying the proxy in k3s.
-  ----------------------------------- ----------------------------------------------------------------------------------------------------------------------------------
+- `nix/AGENT.md`
+  - This file.
+- `nix/container/`
+  - Compose deployment assets and the runtime entrypoint script.
+- `nix/docs/`
+  - Architecture notes, roadmap docs, ADRs, and diagrams for the Nix
+    layer.
+- `nix/modules/`
+  - Reserved for future NixOS modules. Currently empty.
+- `nix/prisma/`
+  - Helper scripts related to Prisma migrations and schema bootstrap.
+- `nix/prisma-5_4_2.nix/`
+  - Custom Prisma CLI packaging.
+- `nix/prisma-engines-5_4_2.nix/`
+  - Custom Prisma engines packaging.
+- `nix/scripts/`
+  - Reserved for future helper scripts. Currently empty.
 
-## Usage Guide
+## Current Shape of the Project
 
-- **Build the container**:
+Implemented and actively used:
 
+- Root-flake-based app and OCI image build
+- Custom Prisma 5.4.2 packaging
+- Deterministic frontend build embedded into the Python package output
+- Compose-based deployment shape
+- Multiple Nix dev shells for backend, frontend, CI, and fullstack work
+
+Planned but not yet implemented:
+
+- NixOS module exports
+- Overlay exports
+- Kubernetes manifests
+- Sample `litellm.yaml`
+- Convenience scripts under `nix/scripts/`
+
+## Working Guidance for Agents
+
+- Start with the root `flake.nix` when reasoning about the actual Nix
+  implementation.
+- Use `CLAUDE.md` at repo root for upstream LiteLLM architecture and
+  development conventions.
+- Verify files exist before trusting older docs; some earlier design
+  docs describe planned files that are not in the tree yet.
+- Prefer small, well-scoped changes that keep the fork close to
+  upstream. Avoid unnecessary edits to upstream Python code when the
+  goal is packaging or deployment.
+
+## Common Tasks
+
+- Build the container image:
+
+  ```bash
   nix build .#packages.x86_64-linux.container
+  ```
 
-  The resulting image is stored in `./result` as a
-  `docker-image.tar.gz`; load it via `docker load < ./result`.
+- Enter the default shell:
 
-- **Run via NixOS module**: In your system configuration, import the
-  module and enable it:
-```
-  { config, pkgs, \... }:
-  {
-    imports = \[ inputs.litellm-nix.nixosModules.litellm \];
-    services.litellm.enable = true;
-    services.litellm.settings.port = 4000;
-    *\# Provide API keys via sops‑nix or environment variables*
-  }
-```
-- **Customise** `litellm.yaml`: Copy `nix/container/litellm.yaml` into
-  your secrets and adjust providers, routing, cost tracking. Do not
-  commit API keys.
+  ```bash
+  nix develop
+  ```
 
-- **Development**: Enter the dev shell:
+- Enter the backend shell:
 
-  nix develop .#nix
+  ```bash
+  nix develop .#backend
+  ```
 
-  Use `build-container.sh` and `test-proxy.sh` to build and run locally.
+- Enter the frontend shell:
 
-## Contribution Guidelines
+  ```bash
+  nix develop .#frontend
+  ```
 
-- Keep packaging logic in `nix/`; do not modify upstream code in
-  `upstream/` unless necessary. Pull from upstream regularly.
-- When adding features, update `nix/README.md` and this `AGENTS.md`
-  accordingly so that agents can discover new files.
-- Use descriptive commit messages
-  (e.g. `feat(container): add compose file`).
-- Test builds with `nix build` before pushing. Use `nix flake check` to
-  ensure the flake is valid.
+## Documentation Expectations
 
-Thank you for contributing to the LiteLLM‑Nix project!
-Keeping this directory structured and well‑documented ensures that
-agents and humans alike can work effectively.
+When you change the Nix layer, update the related docs in `nix/docs/`
+so they describe the current tree rather than an intended future tree.
+
+In particular:
+
+- do not describe missing files as if they already exist
+- clearly label legacy or prototype artifacts
+- prefer documenting the root `flake.nix` flow over old experiments
