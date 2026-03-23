@@ -2603,7 +2603,7 @@ wheels = [
 
 [[package]]
 name = "litellm"
-version = "1.82.2"
+version = "1.82.6"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
@@ -2908,6 +2908,7 @@ dev = [
     { name = "mypy" },
     { name = "numpydoc" },
     { name = "openapi-core" },
+    { name = "parameterized" },
     { name = "pygitguardian" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -3009,7 +3010,7 @@ requires-dist = [
     { name = "prisma", marker = "extra == 'storage'", specifier = ">=0.11.0,<0.12.0" },
     { name = "prometheus-client", marker = "extra == 'observability'", specifier = ">=0.20.0" },
     { name = "pydantic", specifier = ">=2.11.0,<3.0.0" },
-    { name = "pyjwt", extras = ["crypto"], marker = "python_full_version >= '3.9' and extra == 'security'", specifier = ">=2.10.1,<3.0.0" },
+    { name = "pyjwt", extras = ["crypto"], marker = "python_full_version >= '3.9' and extra == 'security'", specifier = ">=2.12.0,<3.0.0" },
     { name = "pynacl", marker = "extra == 'runtime'", specifier = ">=1.6.2,<2.0.0" },
     { name = "pypdf", marker = "extra == 'analytics'", specifier = ">=6.7.3" },
     { name = "pyroscope-io", marker = "sys_platform != 'win32' and extra == 'observability'", specifier = ">=0.8,<1.0.0" },
@@ -3052,6 +3053,7 @@ dev = [
     { name = "mypy", specifier = ">=1.0" },
     { name = "numpydoc" },
     { name = "openapi-core", specifier = ">=0.21.0" },
+    { name = "parameterized", specifier = ">=0.9.0" },
     { name = "pygitguardian" },
     { name = "pytest", specifier = ">=7.4.3" },
     { name = "pytest-asyncio", specifier = ">=0.21.1" },
@@ -3077,12 +3079,12 @@ prod = [
 
 [[package]]
 name = "litellm-enterprise"
-version = "0.1.34"
+version = "0.1.35"
 source = { editable = "enterprise" }
 
 [[package]]
 name = "litellm-proxy-extras"
-version = "0.4.56"
+version = "0.4.60"
 source = { editable = "litellm-proxy-extras" }
 
 [[package]]
@@ -4079,6 +4081,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/44/23/78d645adc35d94d1ac4f2a3c4112ab6f5b8999f4898b8cdf01252f8df4a9/pandas-2.3.3-cp313-cp313t-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:900f47d8f20860de523a1ac881c4c36d65efcb2eb850e6948140fa781736e110", size = 12121912, upload-time = "2025-09-29T23:23:05.042Z" },
     { url = "https://files.pythonhosted.org/packages/53/da/d10013df5e6aaef6b425aa0c32e1fc1f3e431e4bcabd420517dceadce354/pandas-2.3.3-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:a45c765238e2ed7d7c608fc5bc4a6f88b642f2f01e70c0c23d2224dd21829d86", size = 12712160, upload-time = "2025-09-29T23:23:28.57Z" },
     { url = "https://files.pythonhosted.org/packages/bd/17/e756653095a083d8a37cbd816cb87148debcfcd920129b25f99dd8d04271/pandas-2.3.3-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:c4fc4c21971a1a9f4bdb4c73978c7f7256caa3e62b323f70d6cb80db583350bc", size = 13199233, upload-time = "2025-09-29T23:24:24.876Z" },
+]
+
+[[package]]
+name = "parameterized"
+version = "0.9.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ea/49/00c0c0cc24ff4266025a53e41336b79adaa5a4ebfad214f433d623f9865e/parameterized-0.9.0.tar.gz", hash = "sha256:7fc905272cefa4f364c1a3429cbbe9c0f98b793988efb5bf90aac80f08db09b1", size = 24351, upload-time = "2023-03-27T02:01:11.592Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/2f/804f58f0b856ab3bf21617cccf5b39206e6c4c94c2cd227bde125ea6105f/parameterized-0.9.0-py2.py3-none-any.whl", hash = "sha256:4e0758e3d41bea3bbd05ec14fc2c24736723f243b28d702081aef438c9372b1b", size = 20475, upload-time = "2023-03-27T02:01:09.31Z" },
 ]
 
 [[package]]
