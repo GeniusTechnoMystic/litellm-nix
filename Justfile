@@ -39,7 +39,8 @@ sync:
 # Generate the Prisma database client
 generate-prisma:
     @echo "🗄️ Generating Prisma Client..."
-    uv run prisma generate
+    uv sync --locked --dev
+    uv run python -m prisma generate --schema=./schema.prisma
 
 # Build the Python sdist and wheel (Automatically includes injected UI and Prisma code)
 build-python: inject-ui generate-prisma
@@ -146,10 +147,10 @@ sync-upstream:
     
     just clean
     
-    @echo "🔒 Regenerating native uv and bun lockfiles..."
-    nix develop .#backend -c uv lock
-    nix develop .#backend -c uv sync
-    just build-all
+    @echo "🔒 Regenerating native uv lockfiles..."
+    uv lock
+    uv sync
+    
     @echo "✅ Upstream synced. Run 'just test' to verify integration."
 
 # Clean up stale local branches that have been merged
