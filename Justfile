@@ -1,7 +1,7 @@
 # Justfile
 # Orchestrates the polyglot build pipeline for LiteLLM
 
-set shell := ["bash", "-c"]
+set shell := ["bash", "-euo", "pipefail", "-c"]
 
 # Default command: List all available recipes (replaces the old 'help' awk script)
 default:
@@ -34,14 +34,22 @@ inject-ui: build-ui
 # Synchronize the Python environment (Replaces 'pip install -e .')
 sync:
     @echo "📦 Syncing Python dependencies with uv..."
-    uv sync
+
+    # Force creation of a local .venv even if running inside a Nix shell
+    uv sync --frozen
 
 # Generate the Prisma database client
 generate-prisma:
     @echo "🗄️ Generating Prisma Client..."
+    
+    # Ensure we have a local mutable .venv
     uv sync --locked --dev
-    uv run python -m prisma generate --schema=./schema.prisma
 
+    # Run generation using the LOCAL .venv specifically to avoid Nix Store RO issues.
+    # By unsetting VIRTUAL_ENV and PYTHONPATH, we sever the tie to the Nix read-only 
+    # environment just for this command, forcing `uv run` to utilize the local mutable .venv
+    env -u VIRTUAL_ENV -u PYTHONPATH uv run python -m prisma generate --schema=./schema.prisma
+    
 # Build the Python sdist and wheel (Automatically includes injected UI and Prisma code)
 build-python: inject-ui generate-prisma
     @echo "🐍 Building Python sdist and wheel..."
@@ -134,6 +142,8 @@ sync-upstream:
     @# We attempt the merge, but automatically resolve the UI 'out' directory conflicts
     @# This prevents the "Modified by them / Deleted by us" manual approval loop
 
+    # We temporarily disable pipefail/errexit for this block to allow the auto-resolve fallback to function
+    set +eo pipefail; \    
     # Loop: As long as Git is stuck in a rebasing state, keep popping meld!
     git merge upstream/main --no-edit || ( \
         echo "🛠️ Auto-resolving UI artifact conflicts..."; \
@@ -148,8 +158,10 @@ sync-upstream:
     just clean
     
     @echo "🔒 Regenerating native uv lockfiles..."
+    
     uv lock
-    uv sync
+
+    just sync
     
     @echo "✅ Upstream synced. Run 'just test' to verify integration."
 
