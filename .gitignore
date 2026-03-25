@@ -86,11 +86,12 @@ myenv/*
 newenv/*
 package-lock.json
 package.json
+perplexity-mcp
 poetry.lock
 proxy_server_config_@.yaml
 proxy_server_config_2.yaml
 requirements.txt
-result/
+result
 result/*
 router_config.yaml
 scripts/test_vertex_ai_search.py
