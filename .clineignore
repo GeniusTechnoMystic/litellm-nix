@@ -1,0 +1,35 @@
+# Git / editor metadata
+.git/
+.direnv/
+.vscode/
+.venv/
+.python-version
+.nix-bash-history
+
+# Python caches
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+
+# Node / frontend outputs
+**/node_modules/
+ui/litellm-dashboard/.next/
+ui/litellm-dashboard/out/
+litellm/proxy/_experimental/out/
+
+# Build outputs
+dist/
+build/
+result/
+result-*/
+enterprise/dist/
+litellm-proxy-extras/dist/
+
+# Local runtime / secrets / state
+.env
+*.log
+nix/container/secrets/
+nix/container/state/
+nix/container/workspace/
