@@ -3,4 +3,4 @@ prometheus_client
 langfuse
 prisma
 openai==1.99.9
-ddtrace==2.19.0 # for advanced DD tracing / profiling
+ddtrace==4.15.6 # for advanced DD tracing / profiling
