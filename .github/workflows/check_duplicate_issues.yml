@@ -30,13 +30,13 @@ jobs:
 
       - name: Checkout close script
         if: github.event.action == 'opened'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           sparse-checkout: .github/scripts
 
       - name: Set up Python
         if: github.event.action == 'opened'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
