@@ -8,7 +8,7 @@ jobs:
   validate-model-prices-json:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Validate model_prices_and_context_window.json
         run: |
